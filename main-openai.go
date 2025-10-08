@@ -16,17 +16,90 @@ import (
 // 配置结构体
 type Config struct {
 	Port            string
-	AnthropicTarget string
 	FactoryAPIKey   string // 源头 Factory API Key（用于调用上游 API）
 	ProxyAPIKey     string // 对外代理 API Key（客户端使用此 Key）
+	BaseURL         string // Factory AI 基础 URL
 }
 
 // 默认配置
 var config = Config{
-	Port:            getEnv("PORT", "8000"),
-	AnthropicTarget: getEnv("ANTHROPIC_TARGET_URL", "https://gibuoilncyzqebelqjqz.supabase.co/functions/v1/smooth-handler/https://app.factory.ai/api/llm/a/v1/messages"),
-	FactoryAPIKey:   os.Getenv("FACTORY_API_KEY"), // 必须配置
-	ProxyAPIKey:     os.Getenv("PROXY_API_KEY"),   // 必须配置
+	Port:          getEnv("PORT", "8000"),
+	FactoryAPIKey: os.Getenv("FACTORY_API_KEY"), // 必须配置
+	ProxyAPIKey:   os.Getenv("PROXY_API_KEY"),   // 必须配置
+	BaseURL:       getEnv("FACTORY_BASE_URL", "https://gibuoilncyzqebelqjqz.supabase.co/functions/v1/smooth-handler/https://app.factory.ai"),
+}
+
+// 模型提供商类型
+type ModelProvider string
+
+const (
+	ProviderAnthropic ModelProvider = "anthropic"
+	ProviderOpenAI    ModelProvider = "openai"
+	ProviderGoogle    ModelProvider = "google"
+	ProviderXAI       ModelProvider = "xai"
+	ProviderGeneric   ModelProvider = "generic"
+)
+
+// 模型配置映射
+var modelConfigs = map[string]ModelProvider{
+	// Claude 系列 (Anthropic)
+	"claude-3-5-sonnet-20241022":                   ProviderAnthropic,
+	"claude-3-7-sonnet-20250219":                   ProviderAnthropic,
+	"claude-sonnet-4-20250514":                     ProviderAnthropic,
+	"claude-opus-4-1-20250805":                     ProviderAnthropic,
+	"claude-sonnet-4-5-20250929":                   ProviderAnthropic,
+	"anthropic.claude-3-haiku-20240307-v1:0":       ProviderAnthropic,
+	"claude-3-5-haiku-20241022":                    ProviderAnthropic,
+	
+	// OpenAI 系列
+	"o1":                                           ProviderOpenAI,
+	"o3":                                           ProviderOpenAI,
+	"o4-mini":                                      ProviderOpenAI,
+	"o4-mini-alpha-2025-07-11":                     ProviderOpenAI,
+	"gpt-4o":                                       ProviderOpenAI,
+	"gpt-4.1":                                      ProviderOpenAI,
+	"gpt-5-reasoning-alpha-2025-07-17":             ProviderOpenAI,
+	"nectarine-alpha-2025-07-24":                   ProviderOpenAI,
+	"nectarine-alpha-new-reasoning-effort-2025-07-25": ProviderOpenAI,
+	"gpt-5-2025-08-07":                             ProviderOpenAI,
+	"gpt-5-mini-2025-08-07":                        ProviderOpenAI,
+	"gpt-5-nano-2025-08-07":                        ProviderOpenAI,
+	"gpt-5-codex":                                  ProviderOpenAI,
+	
+	// Google 系列
+	"gemini-2.5-flash":                             ProviderGoogle,
+	"gemini-2.5-pro":                               ProviderGoogle,
+	
+	// xAI 系列
+	"grok-4":                                       ProviderXAI,
+	
+	// 其他
+	"glm-4.6":                                      ProviderGeneric,
+}
+
+// 根据模型获取提供商
+func getModelProvider(modelID string) ModelProvider {
+	if provider, ok := modelConfigs[modelID]; ok {
+		return provider
+	}
+	// 默认尝试 OpenAI（因为我们的接口是 OpenAI 兼容的）
+	return ProviderOpenAI
+}
+
+// 根据提供商获取 API 端点
+func getAPIEndpoint(provider ModelProvider) string {
+	switch provider {
+	case ProviderAnthropic:
+		return config.BaseURL + "/api/llm/a/v1/messages"
+	case ProviderOpenAI:
+		return config.BaseURL + "/api/llm/o/v1/chat/completions"
+	case ProviderGoogle:
+		return config.BaseURL + "/api/llm/g/v1/chat/completions"
+	case ProviderXAI:
+		return config.BaseURL + "/api/llm/x/v1/chat/completions"
+	default:
+		return config.BaseURL + "/api/llm/o/v1/chat/completions"
+	}
 }
 
 var startTime = time.Now()
@@ -393,19 +466,40 @@ func chatCompletionsHandler(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("OpenAI请求: model=%v, messages数量=%d, stream=%v", modelName, len(openaiReq["messages"].([]interface{})), isStream)
 
-	// 转换为Anthropic格式
-	anthropicReq := convertOpenAIToAnthropic(openaiReq)
-	anthropicBody, err := json.Marshal(anthropicReq)
-	if err != nil {
-		log.Printf("错误: 序列化Anthropic请求失败: %v", err)
-		http.Error(w, `{"error": {"message": "Internal error", "type": "server_error"}}`, http.StatusInternalServerError)
-		return
+	// 根据模型确定提供商和端点
+	provider := getModelProvider(modelName)
+	endpoint := getAPIEndpoint(provider)
+	
+	log.Printf("模型提供商: %s, API 端点: %s", provider, endpoint)
+
+	var requestBody []byte
+
+	// 根据提供商转换请求格式
+	if provider == ProviderAnthropic {
+		// Claude 模型：转换为 Anthropic 格式
+		anthropicReq := convertOpenAIToAnthropic(openaiReq)
+		requestBody, err = json.Marshal(anthropicReq)
+		if err != nil {
+			log.Printf("错误: 序列化 Anthropic 请求失败: %v", err)
+			http.Error(w, `{"error": {"message": "Internal error", "type": "server_error"}}`, http.StatusInternalServerError)
+			return
+		}
+		log.Printf("已转换为 Anthropic 格式，请求体大小: %d bytes", len(requestBody))
+	} else {
+		// OpenAI/Gemini/Grok 等：直接使用 OpenAI 格式
+		requestBody, err = json.Marshal(openaiReq)
+		if err != nil {
+			log.Printf("错误: 序列化请求失败: %v", err)
+			http.Error(w, `{"error": {"message": "Internal error", "type": "server_error"}}`, http.StatusInternalServerError)
+			return
+		}
+		log.Printf("使用 OpenAI 格式，请求体大小: %d bytes", len(requestBody))
 	}
 
-	log.Printf("已转换为Anthropic格式，请求体大小: %d bytes, stream=%v", len(anthropicBody), isStream)
+	log.Printf("🔍 发送的请求体内容: %s", string(requestBody))
 
 	// 创建代理请求
-	proxyReq, err := http.NewRequest("POST", config.AnthropicTarget, bytes.NewBuffer(anthropicBody))
+	proxyReq, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(requestBody))
 	if err != nil {
 		log.Printf("错误: 创建代理请求失败: %v", err)
 		http.Error(w, `{"error": {"message": "Internal error", "type": "server_error"}}`, http.StatusInternalServerError)
@@ -463,7 +557,17 @@ func chatCompletionsHandler(w http.ResponseWriter, r *http.Request) {
 	// 根据是否流式选择不同的处理方式
 	if isStream {
 		log.Printf("开始流式响应处理")
-		handleStreamResponse(w, resp, modelName)
+		if provider == ProviderAnthropic {
+			// Anthropic 流式响应需要转换
+			handleStreamResponse(w, resp, modelName)
+		} else {
+			// OpenAI/其他：直接转发流式响应
+			w.Header().Set("Content-Type", "text/event-stream")
+			w.Header().Set("Cache-Control", "no-cache")
+			w.Header().Set("Connection", "keep-alive")
+			w.Header().Set("X-Accel-Buffering", "no")
+			io.Copy(w, resp.Body)
+		}
 		log.Printf("流式响应处理完成")
 	} else {
 		// 非流式：读取完整响应
@@ -474,23 +578,29 @@ func chatCompletionsHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// 解析Anthropic响应
-		var anthropicResp map[string]interface{}
-		if err := json.Unmarshal(respBody, &anthropicResp); err != nil {
-			log.Printf("错误: 解析Anthropic响应失败: %v", err)
-			http.Error(w, `{"error": {"message": "Failed to parse response", "type": "server_error"}}`, http.StatusInternalServerError)
-			return
+		if provider == ProviderAnthropic {
+			// Anthropic 响应需要转换为 OpenAI 格式
+			var anthropicResp map[string]interface{}
+			if err := json.Unmarshal(respBody, &anthropicResp); err != nil {
+				log.Printf("错误: 解析 Anthropic 响应失败: %v", err)
+				http.Error(w, `{"error": {"message": "Failed to parse response", "type": "server_error"}}`, http.StatusInternalServerError)
+				return
+			}
+
+			// 转换为 OpenAI 格式
+			openaiResp := convertAnthropicToOpenAI(anthropicResp)
+			log.Printf("已转换为 OpenAI 格式，返回响应")
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(openaiResp)
+		} else {
+			// OpenAI/其他：直接返回原始响应
+			log.Printf("直接返回 OpenAI 格式响应")
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			w.Write(respBody)
 		}
-
-		// 转换为OpenAI格式
-		openaiResp := convertAnthropicToOpenAI(anthropicResp)
-
-		log.Printf("已转换为OpenAI格式，返回响应")
-
-		// 返回OpenAI格式响应
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(openaiResp)
 	}
 }
 
@@ -830,10 +940,15 @@ func main() {
 
 	log.Printf("🚀 Factory OpenAI-Compatible Proxy 启动中...")
 	log.Printf("📍 端口: %s", config.Port)
-	log.Printf("➡️  目标: %s", config.AnthropicTarget)
+	log.Printf("🌐 Factory AI 基础 URL: %s", config.BaseURL)
 	log.Printf("🔐 API Key 代理: 已启用")
 	log.Printf("   - 对外 Key: %s***", config.ProxyAPIKey[:min(8, len(config.ProxyAPIKey))])
 	log.Printf("   - 源头 Key: %s***", config.FactoryAPIKey[:min(8, len(config.FactoryAPIKey))])
+	log.Printf("📡 支持的模型提供商:")
+	log.Printf("   - Anthropic (Claude): /api/llm/a/v1/messages")
+	log.Printf("   - OpenAI (GPT/O系列): /api/llm/o/v1/chat/completions")
+	log.Printf("   - Google (Gemini): /api/llm/g/v1/chat/completions")
+	log.Printf("   - xAI (Grok): /api/llm/x/v1/chat/completions")
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
