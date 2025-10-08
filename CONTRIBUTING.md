@@ -32,7 +32,7 @@
 
 1. **Fork 项目**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/factory-proxy.git
+   git clone https://github.com/libaxuan/factory-proxy.git
    cd factory-proxy/factory-go
    ```
 
