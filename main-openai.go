@@ -56,6 +56,13 @@ func (r *responseRecorder) WriteHeader(code int) {
 	r.ResponseWriter.WriteHeader(code)
 }
 
+// 实现 http.Flusher 接口，支持流式传输
+func (r *responseRecorder) Flush() {
+	if flusher, ok := r.ResponseWriter.(http.Flusher); ok {
+		flusher.Flush()
+	}
+}
+
 // OpenAI格式转Anthropic格式
 func convertOpenAIToAnthropic(openaiBody map[string]interface{}) map[string]interface{} {
 	anthropicBody := make(map[string]interface{})
