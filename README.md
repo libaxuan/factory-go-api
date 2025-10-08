@@ -194,15 +194,21 @@ curl -X POST http://localhost:8001/anthropic/v1/messages \
 
 ## 📚 文档
 
-- [🌊 流式响应功能](STREAMING.md) - SSE 流式和非流式完整指南 🆕
-- [🔐 API Key 代理功能](API-KEY-PROXY.md) - 双 Key 机制保护源头 API Key
-- [OpenAI 兼容模式完整文档](README-OpenAI.md) - 详细的 OpenAI 兼容接口说明
-- [快速开始指南](QUICK_START.md) - 5分钟快速上手
-- [支持的模型列表](MODELS.md) - 25+ 模型完整列表 ⭐
-- [项目结构说明](PROJECT_STRUCTURE.md) - 代码架构详解
-- [贡献指南](CONTRIBUTING.md) - 如何参与项目开发
-- [更新日志](CHANGELOG.md) - 版本更新记录
-- [许可证](LICENSE) - MIT License
+### 核心文档
+- [🚀 快速开始](docs/QUICK_START.md) - 5分钟快速上手
+- [🌊 流式响应](docs/STREAMING.md) - SSE 流式和非流式完整指南 🆕
+- [🔐 API Key 代理](docs/API-KEY-PROXY.md) - 双 Key 机制保护源头 API Key
+- [📦 OpenAI 兼容模式](docs/README-OpenAI.md) - 详细的 OpenAI 兼容接口说明
+
+### 参考文档
+- [📋 支持的模型](docs/MODELS.md) - 25+ 模型完整列表 ⭐
+- [🚢 部署指南](docs/DEPLOYMENT.md) - 生产环境部署
+- [🏗️ 项目结构](docs/PROJECT_STRUCTURE.md) - 代码架构详解
+
+### 其他
+- [🤝 贡献指南](CONTRIBUTING.md) - 如何参与项目开发
+- [📝 更新日志](CHANGELOG.md) - 版本更新记录
+- [📄 许可证](LICENSE) - MIT License
 
 ## 🎯 支持的模型
 

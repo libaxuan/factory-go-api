@@ -610,15 +610,32 @@ func getEmbeddedDocs() string {
                 
                 <div class="endpoint">
                     <div><span class="method post">POST</span><code>/v1/chat/completions</code></div>
-                    <p>创建对话补全</p>
+                    <p>创建对话补全（支持流式和非流式）</p>
+                    
+                    <h4 style="margin-top: 15px; color: #667eea;">💬 非流式请求</h4>
                     <pre>curl -X POST http://localhost:8003/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_PROXY_API_KEY" \
   -d '{
     "model": "claude-sonnet-4-5-20250929",
     "messages": [{"role": "user", "content": "Hello!"}],
-    "max_tokens": 100
+    "max_tokens": 100,
+    "stream": false
   }'</pre>
+
+                    <h4 style="margin-top: 15px; color: #667eea;">🌊 流式请求 (SSE)</h4>
+                    <pre>curl -N -X POST http://localhost:8003/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_PROXY_API_KEY" \
+  -d '{
+    "model": "claude-sonnet-4-5-20250929",
+    "messages": [{"role": "user", "content": "Hello!"}],
+    "max_tokens": 100,
+    "stream": true
+  }'</pre>
+                    <p style="margin-top: 10px; color: #666; font-size: 0.9em;">
+                        💡 注意: 流式请求需要使用 <code>-N</code> 或 <code>--no-buffer</code> 参数禁用缓冲
+                    </p>
                 </div>
 
                 <div class="endpoint">
@@ -649,7 +666,9 @@ func getEmbeddedDocs() string {
 
             <div class="section">
                 <h2>📝 请求示例</h2>
+                
                 <h3>Python (OpenAI SDK)</h3>
+                <h4 style="margin-top: 10px; color: #667eea;">💬 非流式</h4>
                 <pre>from openai import OpenAI
 
 client = OpenAI(
@@ -659,11 +678,24 @@ client = OpenAI(
 
 response = client.chat.completions.create(
     model="claude-sonnet-4-5-20250929",
-    messages=[{"role": "user", "content": "Hello!"}]
+    messages=[{"role": "user", "content": "Hello!"}],
+    stream=False  # 非流式
 )
 print(response.choices[0].message.content)</pre>
 
-                <h3>Node.js</h3>
+                <h4 style="margin-top: 15px; color: #667eea;">🌊 流式</h4>
+                <pre>stream = client.chat.completions.create(
+    model="claude-sonnet-4-5-20250929",
+    messages=[{"role": "user", "content": "Hello!"}],
+    stream=True  # 流式
+)
+
+for chunk in stream:
+    if chunk.choices[0].delta.content:
+        print(chunk.choices[0].delta.content, end="", flush=True)</pre>
+
+                <h3 style="margin-top: 30px;">Node.js</h3>
+                <h4 style="margin-top: 10px; color: #667eea;">💬 非流式</h4>
                 <pre>const OpenAI = require('openai');
 
 const client = new OpenAI({
@@ -673,20 +705,23 @@ const client = new OpenAI({
 
 const response = await client.chat.completions.create({
     model: 'claude-sonnet-4-5-20250929',
-    messages: [{ role: 'user', content: 'Hello!' }]
+    messages: [{ role: 'user', content: 'Hello!' }],
+    stream: false  // 非流式
 });
 console.log(response.choices[0].message.content);</pre>
 
-                <h3>cURL</h3>
-                <pre>curl -X POST http://localhost:8003/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_PROXY_API_KEY" \
-  -d '{
-    "model": "claude-sonnet-4-5-20250929",
-    "messages": [{"role": "user", "content": "Hello!"}],
-    "max_tokens": 100,
-    "temperature": 0.7
-  }'</pre>
+                <h4 style="margin-top: 15px; color: #667eea;">🌊 流式</h4>
+                <pre>const stream = await client.chat.completions.create({
+    model: 'claude-sonnet-4-5-20250929',
+    messages: [{ role: 'user', content: 'Hello!' }],
+    stream: true  // 流式
+});
+
+for await (const chunk of stream) {
+    if (chunk.choices[0]?.delta?.content) {
+        process.stdout.write(chunk.choices[0].delta.content);
+    }
+}</pre>
             </div>
 
             <div class="section">
@@ -695,34 +730,52 @@ console.log(response.choices[0].message.content);</pre>
                     <tr style="background: #f8f9fa;">
                         <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0;">参数</th>
                         <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0;">类型</th>
+                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0;">必填</th>
                         <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0;">说明</th>
                     </tr>
                     <tr>
                         <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;"><code>model</code></td>
                         <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">string</td>
-                        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">模型名称（必填）</td>
+                        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">✅</td>
+                        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">模型名称</td>
                     </tr>
                     <tr>
                         <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;"><code>messages</code></td>
                         <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">array</td>
-                        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">对话消息数组（必填）</td>
+                        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">✅</td>
+                        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">对话消息数组</td>
                     </tr>
                     <tr>
                         <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;"><code>max_tokens</code></td>
                         <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">integer</td>
-                        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">最大生成 token 数</td>
+                        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">❌</td>
+                        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">最大生成 token 数（默认 1024）</td>
                     </tr>
                     <tr>
                         <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;"><code>temperature</code></td>
                         <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">float</td>
-                        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">温度参数 (0-2)</td>
+                        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">❌</td>
+                        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">温度参数 (0-2)，控制随机性</td>
                     </tr>
-                    <tr>
+                    <tr style="background: #f0fdf4;">
                         <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;"><code>stream</code></td>
                         <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">boolean</td>
-                        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">是否流式输出</td>
+                        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">❌</td>
+                        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">
+                            🌊 是否启用流式输出（默认 false）<br>
+                            <small style="color: #666;">• true: SSE 实时流式返回<br>
+                            • false: 等待完整响应后一次性返回</small>
+                        </td>
                     </tr>
                 </table>
+                
+                <div style="margin-top: 20px; padding: 15px; background: #f0fdf4; border-left: 4px solid #10b981; border-radius: 4px;">
+                    <h4 style="margin: 0 0 10px 0; color: #059669;">💡 流式 vs 非流式</h4>
+                    <ul style="margin: 0; padding-left: 20px; color: #065f46;">
+                        <li><strong>流式（stream: true）</strong>: 适合长文本生成、交互式对话，用户体验更好</li>
+                        <li><strong>非流式（stream: false）</strong>: 适合短文本、批处理任务，实现更简单</li>
+                    </ul>
+                </div>
             </div>
         </div>
         <div class="footer">
