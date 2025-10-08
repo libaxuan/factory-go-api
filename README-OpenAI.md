@@ -43,7 +43,7 @@ PORT=8003 ./factory-proxy-openai
 ```bash
 curl -X POST http://localhost:8003/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_FACTORY_API_KEY" \
+  -H "Authorization: Bearer YOUR_PROXY_API_KEY" \
   -d '{
     "model": "claude-sonnet-4-5-20250929",
     "messages": [
@@ -86,7 +86,7 @@ curl -X POST http://localhost:8003/v1/chat/completions \
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="YOUR_FACTORY_API_KEY",
+    api_key="YOUR_PROXY_API_KEY",  # 使用代理 Key，不是 Factory Key
     base_url="http://localhost:8003/v1"
 )
 
@@ -108,7 +108,7 @@ print(response.choices[0].message.content)
 import OpenAI from 'openai';
 
 const client = new OpenAI({
-  apiKey: 'YOUR_FACTORY_API_KEY',
+  apiKey: 'YOUR_PROXY_API_KEY',  // 使用代理 Key
   baseURL: 'http://localhost:8003/v1'
 });
 
@@ -129,7 +129,7 @@ console.log(response.choices[0].message.content);
 ```bash
 curl -X POST http://localhost:8003/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_FACTORY_API_KEY" \
+  -H "Authorization: Bearer YOUR_PROXY_API_KEY" \
   -d '{
     "model": "claude-sonnet-4-5-20250929",
     "messages": [
@@ -149,7 +149,7 @@ curl -X POST http://localhost:8003/v1/chat/completions \
 
 **请求头：**
 - `Content-Type: application/json`
-- `Authorization: Bearer <factory-api-key>`
+- `Authorization: Bearer <proxy-api-key>`  （使用 PROXY_API_KEY，不是 FACTORY_API_KEY）
 
 **请求体：**
 ```json

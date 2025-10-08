@@ -41,7 +41,7 @@ curl http://localhost:8003/v1/health
 ```bash
 curl -X POST http://localhost:8003/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_FACTORY_API_KEY" \
+  -H "Authorization: Bearer YOUR_PROXY_API_KEY" \
   -d '{
     "model": "claude-sonnet-4-5-20250929",
     "messages": [{"role": "user", "content": "Hello!"}],
@@ -64,7 +64,7 @@ from openai import OpenAI
 
 # 初始化客户端
 client = OpenAI(
-    api_key="YOUR_FACTORY_API_KEY",
+    api_key="YOUR_PROXY_API_KEY",  # 使用代理 Key
     base_url="http://localhost:8003/v1"
 )
 
@@ -96,7 +96,7 @@ npm install openai
 import OpenAI from 'openai';
 
 const client = new OpenAI({
-  apiKey: process.env.FACTORY_API_KEY,
+  apiKey: process.env.PROXY_API_KEY,  // 使用代理 Key
   baseURL: 'http://localhost:8003/v1'
 });
 

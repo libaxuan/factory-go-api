@@ -32,6 +32,7 @@ Factory Proxy 是一个用 Go 语言编写的高性能代理服务器，专为 F
 ### 核心功能
 - ⚡ **极致性能** - Go 原生实现，启动 < 10ms，内存占用 ~11MB
 - 🔄 **格式转换** - 自动转换 OpenAI ↔ Anthropic 格式
+- 🔐 **API Key 代理** - 双 Key 机制保护源头 API Key 🆕
 - 🔐 **认证处理** - 支持 Bearer Token 和 API Key 认证
 - 🎯 **智能路由** - 自动注入 Factory Droid system prompt
 - 📊 **详细日志** - 完整的请求/响应日志记录
@@ -51,7 +52,11 @@ Factory Proxy 是一个用 Go 语言编写的高性能代理服务器，专为 F
 ```bash
 # 克隆仓库
 git clone https://github.com/yourusername/factory-proxy.git
-cd factory-proxy/factory-go
+cd factory-proxy/factory-go-api
+
+# 配置环境变量
+cp .env.example .env
+# 编辑 .env 文件，设置 FACTORY_API_KEY 和 PROXY_API_KEY
 
 # 编译
 go build -o factory-proxy main.go              # Anthropic 原生模式
@@ -81,7 +86,7 @@ PORT=8003 ./factory-proxy-openai
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="YOUR_FACTORY_API_KEY",
+    api_key="YOUR_PROXY_API_KEY",  # 使用代理 Key，不是 Factory Key
     base_url="http://localhost:8003/v1"
 )
 
@@ -102,7 +107,7 @@ print(response.choices[0].message.content)
 ```bash
 curl -X POST http://localhost:8003/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_FACTORY_API_KEY" \
+  -H "Authorization: Bearer YOUR_PROXY_API_KEY" \
   -d '{
     "model": "claude-sonnet-4-5-20250929",
     "messages": [{"role": "user", "content": "Hello!"}],
@@ -152,6 +157,7 @@ curl -X POST http://localhost:8001/anthropic/v1/messages \
 
 ## 📚 文档
 
+- [🔐 API Key 代理功能](API-KEY-PROXY.md) - 双 Key 机制保护源头 API Key 🆕
 - [OpenAI 兼容模式完整文档](README-OpenAI.md) - 详细的 OpenAI 兼容接口说明
 - [快速开始指南](QUICK_START.md) - 5分钟快速上手
 - [支持的模型列表](MODELS.md) - 25+ 模型完整列表 ⭐
@@ -189,11 +195,13 @@ curl -X POST http://localhost:8001/anthropic/v1/messages \
 ### 环境变量
 
 ```bash
-# 服务器端口（默认：8000）
-export PORT=8003
+# 必需配置
+export FACTORY_API_KEY="your_real_factory_api_key"  # 源头 Factory API Key
+export PROXY_API_KEY="your_custom_proxy_key"        # 对外代理 Key
 
-# Anthropic API 目标 URL（已预配置）
-export ANTHROPIC_TARGET_URL="https://your-endpoint.com"
+# 可选配置
+export PORT=8003  # 服务器端口（默认：8000）
+export ANTHROPIC_TARGET_URL="https://your-endpoint.com"  # 已预配置
 ```
 
 
@@ -350,7 +358,7 @@ sudo systemctl status factory-proxy
 import OpenAI from 'openai';
 
 const client = new OpenAI({
-  apiKey: process.env.FACTORY_API_KEY,
+  apiKey: process.env.PROXY_API_KEY,  // 使用代理 Key
   baseURL: 'http://localhost:8003/v1'
 });
 
@@ -373,7 +381,7 @@ from openai import OpenAI
 import os
 
 client = OpenAI(
-    api_key=os.getenv("FACTORY_API_KEY"),
+    api_key=os.getenv("PROXY_API_KEY"),  # 使用代理 Key
     base_url="http://localhost:8003/v1"
 )
 
@@ -391,23 +399,33 @@ print(response.choices[0].message.content)
 
 ## 🔐 安全建议
 
-1. **保护 API Key**
+1. **使用 API Key 代理** 🆕
    ```bash
-   # 使用环境变量
-   export FACTORY_API_KEY="your-key-here"
+   # 配置双 Key 机制
+   export FACTORY_API_KEY="your_factory_key"  # 服务器端使用
+   export PROXY_API_KEY="your_proxy_key"      # 客户端使用
    
-   # 不要在代码中硬编码 API Key
-   # 不要提交 .env 文件到 Git
+   # 客户端永远不会接触到源头的 Factory API Key
    ```
 
-2. **使用 HTTPS**
+2. **保护 API Key**
+   ```bash
+   # 使用环境变量或 .env 文件
+   # 不要在代码中硬编码 API Key
+   # 不要提交 .env 文件到 Git（已在 .gitignore 中）
+   ```
+
+3. **使用 HTTPS**
    - 生产环境请使用反向代理（Nginx/Caddy）配置 HTTPS
 
-3. **限流保护**
+4. **限流保护**
    - 建议在反向代理层面配置限流规则
 
-4. **日志管理**
-   - 日志中不包含敏感信息（API Key 已脱敏）
+5. **日志管理**
+   - 日志中不包含敏感信息（API Key 已脱敏，只显示前 8 位）
+
+6. **定期轮换 Key**
+   - 可以独立轮换 PROXY_API_KEY 而不影响上游连接
 
 ## 🆘 故障排除
 

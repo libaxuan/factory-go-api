@@ -34,7 +34,7 @@ Factory Proxy API 提供了便捷的启动脚本 `start.sh`，支持两种运行
    - 健康检查:  http://localhost:8003/v1/health
 
 🔑 认证方式:
-   Authorization: Bearer YOUR_FACTORY_API_KEY
+   Authorization: Bearer YOUR_PROXY_API_KEY
 
 💡 快速测试:
    curl http://localhost:8003/v1/health
@@ -115,7 +115,7 @@ curl http://localhost:8003/v1/health
 # 3. 测试 Chat Completions
 curl -X POST http://localhost:8003/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_FACTORY_API_KEY" \
+  -H "Authorization: Bearer YOUR_PROXY_API_KEY" \
   -d '{
     "model": "claude-sonnet-4-5-20250929",
     "messages": [{"role": "user", "content": "Hello!"}],

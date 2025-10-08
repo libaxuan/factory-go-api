@@ -50,3 +50,8 @@ build/
 
 # PID files
 *.pid
+
+# Python test files
+test_*.py
+__pycache__/
+*.pyc
