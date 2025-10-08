@@ -340,7 +340,10 @@ func handleStreamResponse(w http.ResponseWriter, resp *http.Response, model stri
 
 					// 转换为 OpenAI 格式
 					if openaiData, err := convertAnthropicStreamToOpenAI(eventType, data, model); err == nil && openaiData != "" {
-						fmt.Fprintf(w, "data: %s\n\n", openaiData)
+						if _, err := fmt.Fprintf(w, "data: %s\n\n", openaiData); err != nil {
+							log.Printf("错误: 写入流式数据失败: %v", err)
+							return
+						}
 						flusher.Flush()
 					}
 				}
@@ -349,7 +352,10 @@ func handleStreamResponse(w http.ResponseWriter, resp *http.Response, model stri
 	}
 
 	// 发送结束标记
-	fmt.Fprint(w, "data: [DONE]\n\n")
+	if _, err := fmt.Fprint(w, "data: [DONE]\n\n"); err != nil {
+		log.Printf("错误: 写入结束标记失败: %v", err)
+		return
+	}
 	flusher.Flush()
 
 	if err := scanner.Err(); err != nil {
@@ -392,7 +398,9 @@ func chatCompletionsHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error": {"message": "Failed to read request body", "type": "invalid_request_error"}}`, http.StatusBadRequest)
 		return
 	}
-	r.Body.Close()
+	if err := r.Body.Close(); err != nil {
+		log.Printf("警告: 关闭请求体失败: %v", err)
+	}
 
 	// 解析OpenAI格式请求
 	var openaiReq map[string]interface{}
@@ -467,7 +475,11 @@ func chatCompletionsHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error": {"message": "Proxy request failed", "type": "server_error"}}`, http.StatusBadGateway)
 		return
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Printf("警告: 关闭响应体失败: %v", err)
+		}
+	}()
 
 	log.Printf("收到响应: 状态码 %d", resp.StatusCode)
 
@@ -487,9 +499,13 @@ func chatCompletionsHandler(w http.ResponseWriter, r *http.Request) {
 					"type":    "api_error",
 				},
 			}
-			json.NewEncoder(w).Encode(openaiError)
+			if err := json.NewEncoder(w).Encode(openaiError); err != nil {
+				log.Printf("错误: 编码错误响应失败: %v", err)
+			}
 		} else {
-			w.Write(respBody)
+			if _, err := w.Write(respBody); err != nil {
+				log.Printf("错误: 写入错误响应失败: %v", err)
+			}
 		}
 		return
 	}
@@ -522,18 +538,22 @@ func chatCompletionsHandler(w http.ResponseWriter, r *http.Request) {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(openaiResp)
+		if err := json.NewEncoder(w).Encode(openaiResp); err != nil {
+			log.Printf("错误: 编码响应失败: %v", err)
+		}
 	}
 }
 
 // 健康检查端点
 func healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	if err := json.NewEncoder(w).Encode(map[string]interface{}{
 		"status":    "healthy",
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
 		"uptime":    time.Since(startTime).Seconds(),
-	})
+	}); err != nil {
+		log.Printf("错误: 编码健康检查响应失败: %v", err)
+	}
 }
 
 // API 文档端点
@@ -543,11 +563,15 @@ func docsHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// 如果文件不存在，返回内嵌的文档
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		fmt.Fprint(w, getEmbeddedDocs())
+		if _, err := fmt.Fprint(w, getEmbeddedDocs()); err != nil {
+			log.Printf("错误: 写入文档失败: %v", err)
+		}
 		return
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Write(htmlContent)
+	if _, err := w.Write(htmlContent); err != nil {
+		log.Printf("错误: 写入HTML内容失败: %v", err)
+	}
 }
 
 // 内嵌的 API 文档
@@ -887,19 +911,23 @@ func main() {
 			docsHandler(recorder, r)
 		} else if path == "/" {
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(map[string]string{
+			if err := json.NewEncoder(w).Encode(map[string]string{
 				"service": "Factory OpenAI-Compatible Proxy",
 				"version": "1.0",
-			})
+			}); err != nil {
+				log.Printf("错误: 编码根路径响应失败: %v", err)
+			}
 		} else {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusNotFound)
-			json.NewEncoder(w).Encode(map[string]interface{}{
+			if err := json.NewEncoder(w).Encode(map[string]interface{}{
 				"error": map[string]string{
 					"message": "Invalid endpoint. Use /v1/chat/completions or /health",
 					"type":    "invalid_request_error",
 				},
-			})
+			}); err != nil {
+				log.Printf("错误: 编码404响应失败: %v", err)
+			}
 		}
 
 		duration := time.Since(start)
