@@ -52,10 +52,10 @@ jobs:
         name: codecov-umbrella
 
     - name: Build (Anthropic mode)
-      run: go build -v -o factory-proxy main.go
+      run: go build -v -o factory-proxy .
 
     - name: Build (OpenAI mode)
-      run: go build -v -o factory-proxy-openai main-openai.go
+      run: go build -v -tags openai -o factory-proxy-openai .
 
     - name: Run golangci-lint
       uses: golangci/golangci-lint-action@v3
@@ -80,24 +80,24 @@ jobs:
     - name: Build binaries
       run: |
         # Linux AMD64
-        GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o factory-proxy-linux-amd64 main.go
-        GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o factory-proxy-openai-linux-amd64 main-openai.go
+        GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o factory-proxy-linux-amd64 .
+        GOOS=linux GOARCH=amd64 go build -tags openai -ldflags="-s -w" -o factory-proxy-openai-linux-amd64 .
         
         # Linux ARM64
-        GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o factory-proxy-linux-arm64 main.go
-        GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o factory-proxy-openai-linux-arm64 main-openai.go
+        GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o factory-proxy-linux-arm64 .
+        GOOS=linux GOARCH=arm64 go build -tags openai -ldflags="-s -w" -o factory-proxy-openai-linux-arm64 .
         
         # macOS AMD64
-        GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o factory-proxy-darwin-amd64 main.go
-        GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o factory-proxy-openai-darwin-amd64 main-openai.go
+        GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o factory-proxy-darwin-amd64 .
+        GOOS=darwin GOARCH=amd64 go build -tags openai -ldflags="-s -w" -o factory-proxy-openai-darwin-amd64 .
         
         # macOS ARM64
-        GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o factory-proxy-darwin-arm64 main.go
-        GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o factory-proxy-openai-darwin-arm64 main-openai.go
+        GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o factory-proxy-darwin-arm64 .
+        GOOS=darwin GOARCH=arm64 go build -tags openai -ldflags="-s -w" -o factory-proxy-openai-darwin-arm64 .
         
         # Windows AMD64
-        GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o factory-proxy-windows-amd64.exe main.go
-        GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o factory-proxy-openai-windows-amd64.exe main-openai.go
+        GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o factory-proxy-windows-amd64.exe .
+        GOOS=windows GOARCH=amd64 go build -tags openai -ldflags="-s -w" -o factory-proxy-openai-windows-amd64.exe .
 
     - name: Create Release
       uses: softprops/action-gh-release@v1
