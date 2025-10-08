@@ -6,6 +6,31 @@
 echo "🚀 Factory Proxy API - 快速启动"
 echo "=================================="
 
+# 加载 .env 文件（如果存在）
+if [ -f .env ]; then
+    echo "📄 加载 .env 配置文件..."
+    export $(cat .env | grep -v '^#' | grep -v '^$' | xargs)
+    echo "✅ 环境变量已加载"
+else
+    echo "⚠️  未找到 .env 文件，将使用环境变量或默认值"
+    echo "   提示: 复制 .env.example 为 .env 并配置 API Keys"
+fi
+
+# 检查必需的环境变量
+if [ "$MODE" != "anthropic" ]; then
+    if [ -z "$FACTORY_API_KEY" ]; then
+        echo "❌ 错误: 未设置 FACTORY_API_KEY 环境变量"
+        echo "   请在 .env 文件中设置或通过环境变量设置"
+        exit 1
+    fi
+    if [ -z "$PROXY_API_KEY" ]; then
+        echo "❌ 错误: 未设置 PROXY_API_KEY 环境变量"
+        echo "   请在 .env 文件中设置或通过环境变量设置"
+        exit 1
+    fi
+    echo "✅ API Keys 已配置"
+fi
+
 # 检查 Go 是否安装
 if ! command -v go &> /dev/null; then
     echo "❌ Go 未安装，请先安装 Go: https://golang.org/dl/"
@@ -61,10 +86,13 @@ if [ $? -eq 0 ]; then
         echo "   - 健康检查:  http://localhost:$PORT/v1/health"
         echo ""
         echo "🔑 认证方式:"
-        echo "   Authorization: Bearer YOUR_FACTORY_API_KEY"
+        echo "   Authorization: Bearer YOUR_PROXY_API_KEY"
         echo ""
         echo "💡 快速测试:"
         echo "   curl http://localhost:$PORT/v1/health"
+        echo ""
+        echo "📖 API 文档:"
+        echo "   http://localhost:$PORT/docs"
     fi
     
     echo ""

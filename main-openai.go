@@ -16,12 +16,16 @@ import (
 type Config struct {
 	Port            string
 	AnthropicTarget string
+	FactoryAPIKey   string // 源头 Factory API Key（用于调用上游 API）
+	ProxyAPIKey     string // 对外代理 API Key（客户端使用此 Key）
 }
 
 // 默认配置
 var config = Config{
 	Port:            getEnv("PORT", "8000"),
 	AnthropicTarget: getEnv("ANTHROPIC_TARGET_URL", "https://gibuoilncyzqebelqjqz.supabase.co/functions/v1/smooth-handler/https://app.factory.ai/api/llm/a/v1/messages"),
+	FactoryAPIKey:   os.Getenv("FACTORY_API_KEY"),   // 必须配置
+	ProxyAPIKey:     os.Getenv("PROXY_API_KEY"),     // 必须配置
 }
 
 var startTime = time.Now()
@@ -31,6 +35,13 @@ func getEnv(key, defaultValue string) string {
 		return value
 	}
 	return defaultValue
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
 
 // 响应记录器
@@ -170,7 +181,7 @@ func convertAnthropicToOpenAI(anthropicResp map[string]interface{}) map[string]i
 func chatCompletionsHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("收到OpenAI格式请求: %s %s", r.Method, r.URL.Path)
 
-	// 获取API Key
+	// 获取客户端提供的 API Key
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
 		log.Printf("错误: 缺少 Authorization 头")
@@ -183,8 +194,16 @@ func chatCompletionsHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error": {"message": "Invalid authorization header format", "type": "invalid_request_error"}}`, http.StatusUnauthorized)
 		return
 	}
-	apiKey := parts[1]
-	log.Printf("API Key已获取: %s...", apiKey[:10])
+	clientAPIKey := parts[1]
+
+	// 验证客户端 API Key 是否匹配代理 Key
+	if config.ProxyAPIKey != "" && clientAPIKey != config.ProxyAPIKey {
+		log.Printf("错误: API Key 验证失败")
+		http.Error(w, `{"error": {"message": "Invalid API key", "type": "authentication_error"}}`, http.StatusUnauthorized)
+		return
+	}
+
+	log.Printf("API Key 验证通过")
 
 	// 读取请求体
 	bodyBytes, err := io.ReadAll(r.Body)
@@ -224,9 +243,9 @@ func chatCompletionsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 设置头信息
+	// 设置头信息 - 使用源头 Factory API Key
 	proxyReq.Header.Set("Content-Type", "application/json")
-	proxyReq.Header.Set("Authorization", "Bearer "+apiKey)
+	proxyReq.Header.Set("Authorization", "Bearer "+config.FactoryAPIKey)
 	proxyReq.Header.Set("Host", "gibuoilncyzqebelqjqz.supabase.co")
 	proxyReq.Header.Set("User-Agent", "Factory-Proxy/1.0.0")
 	proxyReq.Header.Set("x-forwarded-for", "unknown")
@@ -541,9 +560,20 @@ console.log(response.choices[0].message.content);</pre>
 }
 
 func main() {
+	// 验证必需的环境变量
+	if config.FactoryAPIKey == "" {
+		log.Fatalf("❌ 错误: 必须设置 FACTORY_API_KEY 环境变量")
+	}
+	if config.ProxyAPIKey == "" {
+		log.Fatalf("❌ 错误: 必须设置 PROXY_API_KEY 环境变量")
+	}
+
 	log.Printf("🚀 Factory OpenAI-Compatible Proxy 启动中...")
 	log.Printf("📍 端口: %s", config.Port)
 	log.Printf("➡️  目标: %s", config.AnthropicTarget)
+	log.Printf("🔐 API Key 代理: 已启用")
+	log.Printf("   - 对外 Key: %s***", config.ProxyAPIKey[:min(8, len(config.ProxyAPIKey))])
+	log.Printf("   - 源头 Key: %s***", config.FactoryAPIKey[:min(8, len(config.FactoryAPIKey))])
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
