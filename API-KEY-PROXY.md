@@ -35,6 +35,7 @@ cp .env.example .env
 
 ```bash
 # 源头 Factory API Key（不会暴露）
+# 从 https://app.factory.ai/settings/api-keys 获取
 FACTORY_API_KEY=your_real_factory_api_key_here
 
 # 对外代理 Key（客户端使用）
@@ -45,7 +46,7 @@ PORT=8003
 ```
 
 **重要提示**:
-- `FACTORY_API_KEY`: 您从 Factory AI 获取的真实 API Key
+- `FACTORY_API_KEY`: 您从 Factory AI 获取的真实 API Key (https://app.factory.ai/settings/api-keys)
 - `PROXY_API_KEY`: 您自定义的任意字符串，建议使用复杂的随机字符串
 
 ### 3. 生成安全的 PROXY_API_KEY

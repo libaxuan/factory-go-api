@@ -56,7 +56,9 @@ cd factory-proxy/factory-go-api
 
 # 配置环境变量
 cp .env.example .env
-# 编辑 .env 文件，设置 FACTORY_API_KEY 和 PROXY_API_KEY
+# 编辑 .env 文件:
+# - FACTORY_API_KEY: 从 https://app.factory.ai/settings/api-keys 获取
+# - PROXY_API_KEY: 自定义的安全字符串
 
 # 编译
 go build -o factory-proxy main.go              # Anthropic 原生模式
@@ -196,8 +198,8 @@ curl -X POST http://localhost:8001/anthropic/v1/messages \
 
 ```bash
 # 必需配置
-export FACTORY_API_KEY="your_real_factory_api_key"  # 源头 Factory API Key
-export PROXY_API_KEY="your_custom_proxy_key"        # 对外代理 Key
+export FACTORY_API_KEY="your_real_factory_api_key"  # 源头 Factory API Key (从 https://app.factory.ai/settings/api-keys 获取)
+export PROXY_API_KEY="your_custom_proxy_key"        # 对外代理 Key (自定义)
 
 # 可选配置
 export PORT=8003  # 服务器端口（默认：8000）
@@ -402,8 +404,8 @@ print(response.choices[0].message.content)
 1. **使用 API Key 代理** 🆕
    ```bash
    # 配置双 Key 机制
-   export FACTORY_API_KEY="your_factory_key"  # 服务器端使用
-   export PROXY_API_KEY="your_proxy_key"      # 客户端使用
+   export FACTORY_API_KEY="your_factory_key"  # 服务器端使用 (从 https://app.factory.ai/settings/api-keys 获取)
+   export PROXY_API_KEY="your_proxy_key"      # 客户端使用 (自定义)
    
    # 客户端永远不会接触到源头的 Factory API Key
    ```
