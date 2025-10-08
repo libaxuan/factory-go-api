@@ -1,7 +1,10 @@
-.PHONY: all build build-openai clean test run run-openai help install dev fmt lint
+.PHONY: all start build build-openai clean test run run-openai help install dev fmt lint
 
-# 默认目标
-all: build build-openai
+# 默认目标 - 推荐使用 OpenAI 模式
+all: build-openai
+
+# 快速启动 (推荐) - OpenAI 兼容模式
+start: run-openai
 
 # 构建 Anthropic 原生模式
 build:
@@ -93,29 +96,34 @@ build-all:
 
 # 显示帮助信息
 help:
-	@echo "Factory Proxy - Makefile 命令"
+	@echo "Factory Proxy API - Makefile 命令"
 	@echo ""
 	@echo "使用方法: make [目标]"
 	@echo ""
-	@echo "可用目标:"
-	@echo "  all          - 构建所有版本（默认）"
-	@echo "  build        - 构建 Anthropic 原生模式"
-	@echo "  build-openai - 构建 OpenAI 兼容模式"
-	@echo "  build-all    - 构建所有平台的二进制文件"
-	@echo "  install      - 安装 Go 依赖"
-	@echo "  run          - 构建并运行 Anthropic 原生模式"
-	@echo "  run-openai   - 构建并运行 OpenAI 兼容模式"
-	@echo "  dev          - 开发模式（Anthropic，不构建）"
-	@echo "  dev-openai   - 开发模式（OpenAI，不构建）"
-	@echo "  test         - 运行测试"
-	@echo "  fmt          - 格式化代码"
-	@echo "  lint         - 代码检查"
-	@echo "  clean        - 清理构建文件"
-	@echo "  help         - 显示此帮助信息"
+	@echo "🌟 推荐命令:"
+	@echo "  make start       - 快速启动 (OpenAI 兼容模式) ⭐"
+	@echo "  make             - 默认构建 (OpenAI 兼容模式)"
 	@echo ""
-	@echo "示例:"
-	@echo "  make build-openai    # 构建 OpenAI 兼容版本"
-	@echo "  make run-openai      # 构建并运行 OpenAI 版本"
-	@echo "  make dev-openai      # 开发模式运行 OpenAI 版本"
-	@echo "  make test            # 运行测试"
-	@echo "  make clean           # 清理所有构建文件"
+	@echo "📦 构建命令:"
+	@echo "  build-openai     - 构建 OpenAI 兼容模式 ⭐"
+	@echo "  build            - 构建 Anthropic 原生模式"
+	@echo "  build-all        - 构建所有平台的二进制文件"
+	@echo ""
+	@echo "🚀 运行命令:"
+	@echo "  run-openai       - 构建并运行 OpenAI 兼容模式 ⭐"
+	@echo "  run              - 构建并运行 Anthropic 原生模式"
+	@echo "  dev-openai       - 开发模式 (OpenAI，无需构建)"
+	@echo "  dev              - 开发模式 (Anthropic，无需构建)"
+	@echo ""
+	@echo "🔧 工具命令:"
+	@echo "  install          - 安装 Go 依赖"
+	@echo "  test             - 运行测试"
+	@echo "  fmt              - 格式化代码"
+	@echo "  lint             - 代码检查"
+	@echo "  clean            - 清理构建文件"
+	@echo ""
+	@echo "💡 快速开始:"
+	@echo "  make start                    # 推荐！一键启动"
+	@echo "  make run-openai              # OpenAI 兼容模式"
+	@echo "  make dev-openai              # 开发模式"
+	@echo "  PORT=9000 make run-openai    # 自定义端口"
