@@ -439,7 +439,7 @@ func getEmbeddedDocs() string {
                     <p>创建对话补全</p>
                     <pre>curl -X POST http://localhost:8003/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_FACTORY_API_KEY" \
+  -H "Authorization: Bearer YOUR_PROXY_API_KEY" \
   -d '{
     "model": "claude-sonnet-4-5-20250929",
     "messages": [{"role": "user", "content": "Hello!"}],
@@ -469,8 +469,8 @@ func getEmbeddedDocs() string {
 
             <div class="section">
                 <h2>🔑 认证</h2>
-                <p>使用 Factory API Key 进行认证：</p>
-                <pre>Authorization: Bearer YOUR_FACTORY_API_KEY</pre>
+                <p>使用代理 API Key 进行认证：</p>
+                <pre>Authorization: Bearer YOUR_PROXY_API_KEY</pre>
             </div>
 
             <div class="section">
@@ -480,7 +480,7 @@ func getEmbeddedDocs() string {
 
 client = OpenAI(
     base_url="http://localhost:8003/v1",
-    api_key="YOUR_FACTORY_API_KEY"
+    api_key="YOUR_PROXY_API_KEY"  # 使用代理 Key
 )
 
 response = client.chat.completions.create(
@@ -494,7 +494,7 @@ print(response.choices[0].message.content)</pre>
 
 const client = new OpenAI({
     baseURL: 'http://localhost:8003/v1',
-    apiKey: 'YOUR_FACTORY_API_KEY'
+    apiKey: 'YOUR_PROXY_API_KEY'  // 使用代理 Key
 });
 
 const response = await client.chat.completions.create({
@@ -506,7 +506,7 @@ console.log(response.choices[0].message.content);</pre>
                 <h3>cURL</h3>
                 <pre>curl -X POST http://localhost:8003/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_FACTORY_API_KEY" \
+  -H "Authorization: Bearer YOUR_PROXY_API_KEY" \
   -d '{
     "model": "claude-sonnet-4-5-20250929",
     "messages": [{"role": "user", "content": "Hello!"}],
