@@ -302,6 +302,242 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
 		"uptime":    time.Since(startTime).Seconds(),
 	})
+
+// API 文档端点
+func docsHandler(w http.ResponseWriter, r *http.Request) {
+	// 读取 docs.html 文件
+	htmlContent, err := os.ReadFile("docs.html")
+	if err != nil {
+		// 如果文件不存在，返回内嵌的文档
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		fmt.Fprint(w, getEmbeddedDocs())
+		return
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Write(htmlContent)
+}
+
+// 内嵌的 API 文档
+func getEmbeddedDocs() string {
+	return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factory Proxy API - 文档</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        .header h1 { font-size: 2.5em; margin-bottom: 10px; }
+        .content { padding: 40px; }
+        .section { margin-bottom: 40px; }
+        .section h2 {
+            color: #667eea;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+        .endpoint {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .method {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .method.post { background: #10b981; color: white; }
+        .method.get { background: #3b82f6; color: white; }
+        code {
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: Monaco, monospace;
+            color: #e74c3c;
+        }
+        pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: Monaco, monospace;
+        }
+        .footer {
+            background: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Factory Proxy API</h1>
+            <p>OpenAI 兼容格式 | 支持 25+ AI 模型</p>
+        </div>
+        <div class="content">
+            <div class="section">
+                <h2>📖 快速开始</h2>
+                <p>Factory Proxy API 提供 OpenAI 兼容的接口，让您可以使用标准的 OpenAI SDK 访问 Factory AI 的强大模型。</p>
+            </div>
+
+            <div class="section">
+                <h2>🔌 API 端点</h2>
+                
+                <div class="endpoint">
+                    <div><span class="method post">POST</span><code>/v1/chat/completions</code></div>
+                    <p>创建对话补全</p>
+                    <pre>curl -X POST http://localhost:8003/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_FACTORY_API_KEY" \
+  -d '{
+    "model": "claude-sonnet-4-5-20250929",
+    "messages": [{"role": "user", "content": "Hello!"}],
+    "max_tokens": 100
+  }'</pre>
+                </div>
+
+                <div class="endpoint">
+                    <div><span class="method get">GET</span><code>/v1/health</code></div>
+                    <p>健康检查</p>
+                    <pre>curl http://localhost:8003/v1/health</pre>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>🤖 支持的模型</h2>
+                <p>支持 <strong>25+</strong> 种 AI 模型，包括：</p>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li><code>claude-sonnet-4-5-20250929</code> - Claude 4.5 Sonnet (推荐)</li>
+                    <li><code>claude-opus-4-1-20250805</code> - Claude 4 Opus</li>
+                    <li><code>gpt-5-2025-08-07</code> - GPT-5</li>
+                    <li><code>gpt-5-codex</code> - GPT-5 Codex</li>
+                    <li><code>gemini-2.5-pro</code> - Gemini 2.5 Pro</li>
+                    <li>更多模型请查看 <a href="https://github.com/libaxuan/factory-go-api/blob/main/MODELS.md" target="_blank">MODELS.md</a></li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>🔑 认证</h2>
+                <p>使用 Factory API Key 进行认证：</p>
+                <pre>Authorization: Bearer YOUR_FACTORY_API_KEY</pre>
+            </div>
+
+            <div class="section">
+                <h2>📝 请求示例</h2>
+                <h3>Python (OpenAI SDK)</h3>
+                <pre>from openai import OpenAI
+
+client = OpenAI(
+    base_url="http://localhost:8003/v1",
+    api_key="YOUR_FACTORY_API_KEY"
+)
+
+response = client.chat.completions.create(
+    model="claude-sonnet-4-5-20250929",
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+print(response.choices[0].message.content)</pre>
+
+                <h3>Node.js</h3>
+                <pre>const OpenAI = require('openai');
+
+const client = new OpenAI({
+    baseURL: 'http://localhost:8003/v1',
+    apiKey: 'YOUR_FACTORY_API_KEY'
+});
+
+const response = await client.chat.completions.create({
+    model: 'claude-sonnet-4-5-20250929',
+    messages: [{ role: 'user', content: 'Hello!' }]
+});
+console.log(response.choices[0].message.content);</pre>
+
+                <h3>cURL</h3>
+                <pre>curl -X POST http://localhost:8003/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_FACTORY_API_KEY" \
+  -d '{
+    "model": "claude-sonnet-4-5-20250929",
+    "messages": [{"role": "user", "content": "Hello!"}],
+    "max_tokens": 100,
+    "temperature": 0.7
+  }'</pre>
+            </div>
+
+            <div class="section">
+                <h2>⚙️ 参数说明</h2>
+                <table style="width:100%; border-collapse: collapse;">
+                    <tr style="background: #f8f9fa;">
+                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0;">参数</th>
+                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0;">类型</th>
+                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0;">说明</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;"><code>model</code></td>
+                        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">string</td>
+                        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">模型名称（必填）</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;"><code>messages</code></td>
+                        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">array</td>
+                        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">对话消息数组（必填）</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;"><code>max_tokens</code></td>
+                        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">integer</td>
+                        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">最大生成 token 数</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;"><code>temperature</code></td>
+                        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">float</td>
+                        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">温度参数 (0-2)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;"><code>stream</code></td>
+                        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">boolean</td>
+                        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">是否流式输出</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="footer">
+            <p><strong>Factory Proxy API</strong> | <a href="https://github.com/libaxuan/factory-go-api" target="_blank" style="color: #667eea;">GitHub</a> | <a href="https://github.com/libaxuan/factory-go-api/blob/main/README.md" target="_blank" style="color: #667eea;">文档</a></p>
+        </div>
+    </div>
+</body>
+</html>`
+} 
 }
 
 func main() {
@@ -319,6 +555,8 @@ func main() {
 			healthHandler(recorder, r)
 		} else if path == "/v1/chat/completions" {
 			chatCompletionsHandler(recorder, r)
+		} else if path == "/docs" || path == "/v1/docs" {
+			docsHandler(recorder, r)
 		} else if path == "/" {
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(map[string]string{
@@ -349,19 +587,12 @@ func main() {
 	}
 
 	log.Printf("✅ 服务器已启动，监听于 http://localhost:%s", config.Port)
-	log.Printf("📋 OpenAI兼容接口:")
-	log.Printf("   - POST /v1/chat/completions -> 需要 Authorization: Bearer <factory-api-key>")
-	log.Printf("   - GET /health 或 /v1/health -> 健康检查")
+	log.Printf("📋 API 端点:")
+	log.Printf("   - POST /v1/chat/completions")
+	log.Printf("   - GET  /v1/health")
+	log.Printf("   - GET  /docs")
 	log.Printf("")
-	log.Printf("💡 使用示例:")
-	log.Printf("   curl -X POST http://localhost:%s/v1/chat/completions \\", config.Port)
-	log.Printf("     -H 'Content-Type: application/json' \\")
-	log.Printf("     -H 'Authorization: Bearer YOUR_FACTORY_API_KEY' \\")
-	log.Printf("     -d '{")
-	log.Printf("       \"model\": \"claude-sonnet-4-5-20250929\",")
-	log.Printf("       \"messages\": [{\"role\": \"user\", \"content\": \"Hello\"}],")
-	log.Printf("       \"max_tokens\": 100")
-	log.Printf("     }'")
+	log.Printf("📖 API 文档: http://localhost:%s/docs", config.Port)
 
 	if err := server.ListenAndServe(); err != nil {
 		log.Fatalf("❌ 服务器启动失败: %v", err)
