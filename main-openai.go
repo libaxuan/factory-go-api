@@ -132,9 +132,9 @@ func convertOpenAIToAnthropic(openaiBody map[string]interface{}) map[string]inte
 	if maxTokens, ok := openaiBody["max_tokens"].(float64); ok {
 		anthropicBody["max_tokens"] = int(maxTokens)
 	} else {
-		// Claude Sonnet 4.5 支持最大 150万 tokens 输出
-		// 设置默认值为 100000 以充分利用大上下文能力
-		anthropicBody["max_tokens"] = 100000
+		// Claude Sonnet 4.5 的最大输出限制是 64000 tokens
+		// 设置默认值为 4096，这是一个合理的平衡值
+		anthropicBody["max_tokens"] = 4096
 	}
 
 	// 转换temperature
