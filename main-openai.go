@@ -92,13 +92,13 @@ func getAPIEndpoint(provider ModelProvider) string {
 	case ProviderAnthropic:
 		return config.BaseURL + "/api/llm/a/v1/messages"
 	case ProviderOpenAI:
-		return config.BaseURL + "/api/llm/o/v1/chat/completions"
+		return config.BaseURL + "/api/llm/o/v1/responses"
 	case ProviderGoogle:
-		return config.BaseURL + "/api/llm/g/v1/chat/completions"
+		return config.BaseURL + "/api/llm/g/v1/responses"
 	case ProviderXAI:
-		return config.BaseURL + "/api/llm/x/v1/chat/completions"
+		return config.BaseURL + "/api/llm/x/v1/responses"
 	default:
-		return config.BaseURL + "/api/llm/o/v1/chat/completions"
+		return config.BaseURL + "/api/llm/o/v1/responses"
 	}
 }
 
@@ -486,14 +486,50 @@ func chatCompletionsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Printf("已转换为 Anthropic 格式，请求体大小: %d bytes", len(requestBody))
 	} else {
-		// OpenAI/Gemini/Grok 等：直接使用 OpenAI 格式
+		// OpenAI/Gemini/Grok 等：处理 Responses API 格式
+		
+		// 模型名称替换
+		if modelName == "gpt-5" {
+			openaiReq["model"] = "gpt-5-2025-08-07"
+			log.Printf("模型名称替换: gpt-5 → gpt-5-2025-08-07")
+		}
+		
+		// Responses API 使用 'input' 而不是 'messages'
+		if messages, ok := openaiReq["messages"]; ok {
+			openaiReq["input"] = messages
+			delete(openaiReq, "messages")
+			log.Printf("已将 messages 转换为 input")
+		}
+		
+		// 移除 Responses API 不支持的参数
+		delete(openaiReq, "max_tokens")
+		delete(openaiReq, "temperature")
+		delete(openaiReq, "top_p")
+		delete(openaiReq, "n")
+		delete(openaiReq, "stop")
+		delete(openaiReq, "presence_penalty")
+		delete(openaiReq, "frequency_penalty")
+		
+		// 添加 instructions 字段
+		openaiReq["instructions"] = "You are Droid, an AI software engineering agent built by Factory.\n"
+		
+		// 移除 gpt-5-codex 的 reasoning.effort 字段
+		if modelName == "gpt-5-codex" {
+			if reasoning, ok := openaiReq["reasoning"].(map[string]interface{}); ok {
+				if _, hasEffort := reasoning["effort"]; hasEffort {
+					delete(reasoning, "effort")
+					log.Printf("已移除 gpt-5-codex 的 reasoning.effort 字段")
+				}
+			}
+		}
+		
 		requestBody, err = json.Marshal(openaiReq)
 		if err != nil {
 			log.Printf("错误: 序列化请求失败: %v", err)
 			http.Error(w, `{"error": {"message": "Internal error", "type": "server_error"}}`, http.StatusInternalServerError)
 			return
 		}
-		log.Printf("使用 OpenAI 格式，请求体大小: %d bytes", len(requestBody))
+		log.Printf("使用 Responses API 格式，请求体大小: %d bytes", len(requestBody))
 	}
 
 	log.Printf("🔍 发送的请求体内容: %s", string(requestBody))
@@ -946,9 +982,9 @@ func main() {
 	log.Printf("   - 源头 Key: %s***", config.FactoryAPIKey[:min(8, len(config.FactoryAPIKey))])
 	log.Printf("📡 支持的模型提供商:")
 	log.Printf("   - Anthropic (Claude): /api/llm/a/v1/messages")
-	log.Printf("   - OpenAI (GPT/O系列): /api/llm/o/v1/chat/completions")
-	log.Printf("   - Google (Gemini): /api/llm/g/v1/chat/completions")
-	log.Printf("   - xAI (Grok): /api/llm/x/v1/chat/completions")
+	log.Printf("   - OpenAI (GPT/O系列): /api/llm/o/v1/responses")
+	log.Printf("   - Google (Gemini): /api/llm/g/v1/responses")
+	log.Printf("   - xAI (Grok): /api/llm/x/v1/responses")
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
