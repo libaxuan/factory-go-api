@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -177,6 +178,156 @@ func convertAnthropicToOpenAI(anthropicResp map[string]interface{}) map[string]i
 	return openaiResp
 }
 
+// 转换 Anthropic 流式事件为 OpenAI 格式
+func convertAnthropicStreamToOpenAI(eventType, data, model string) (string, error) {
+	if eventType == "message_start" {
+		// 解析 message_start 事件
+		var msgStart map[string]interface{}
+		if err := json.Unmarshal([]byte(data), &msgStart); err != nil {
+			return "", err
+		}
+		
+		response := map[string]interface{}{
+			"id":      msgStart["id"],
+			"object":  "chat.completion.chunk",
+			"created": time.Now().Unix(),
+			"model":   model,
+			"choices": []map[string]interface{}{
+				{
+					"index": 0,
+					"delta": map[string]interface{}{
+						"role": "assistant",
+					},
+					"finish_reason": nil,
+				},
+			},
+		}
+		jsonData, _ := json.Marshal(response)
+		return string(jsonData), nil
+	}
+	
+	if eventType == "content_block_delta" {
+		// 解析内容增量
+		var delta map[string]interface{}
+		if err := json.Unmarshal([]byte(data), &delta); err != nil {
+			return "", err
+		}
+		
+		text := ""
+		if deltaObj, ok := delta["delta"].(map[string]interface{}); ok {
+			if textVal, ok := deltaObj["text"].(string); ok {
+				text = textVal
+			}
+		}
+		
+		response := map[string]interface{}{
+			"id":      "chatcmpl-" + fmt.Sprintf("%d", time.Now().UnixNano()),
+			"object":  "chat.completion.chunk",
+			"created": time.Now().Unix(),
+			"model":   model,
+			"choices": []map[string]interface{}{
+				{
+					"index": 0,
+					"delta": map[string]interface{}{
+						"content": text,
+					},
+					"finish_reason": nil,
+				},
+			},
+		}
+		jsonData, _ := json.Marshal(response)
+		return string(jsonData), nil
+	}
+	
+	if eventType == "message_delta" {
+		// 处理消息结束
+		var msgDelta map[string]interface{}
+		if err := json.Unmarshal([]byte(data), &msgDelta); err != nil {
+			return "", err
+		}
+		
+		finishReason := "stop"
+		if delta, ok := msgDelta["delta"].(map[string]interface{}); ok {
+			if stopReason, ok := delta["stop_reason"].(string); ok && stopReason == "max_tokens" {
+				finishReason = "length"
+			}
+		}
+		
+		response := map[string]interface{}{
+			"id":      "chatcmpl-" + fmt.Sprintf("%d", time.Now().UnixNano()),
+			"object":  "chat.completion.chunk",
+			"created": time.Now().Unix(),
+			"model":   model,
+			"choices": []map[string]interface{}{
+				{
+					"index":         0,
+					"delta":         map[string]interface{}{},
+					"finish_reason": finishReason,
+				},
+			},
+		}
+		jsonData, _ := json.Marshal(response)
+		return string(jsonData), nil
+	}
+	
+	return "", nil
+}
+
+// 处理流式响应
+func handleStreamResponse(w http.ResponseWriter, resp *http.Response, model string) {
+	// 设置 SSE 头
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("X-Accel-Buffering", "no")
+	
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		log.Printf("错误: 响应不支持流式传输")
+		http.Error(w, "Streaming not supported", http.StatusInternalServerError)
+		return
+	}
+	
+	scanner := bufio.NewScanner(resp.Body)
+	scanner.Split(bufio.ScanLines)
+	
+	for scanner.Scan() {
+		line := scanner.Text()
+		
+		// 跳过空行
+		if line == "" {
+			continue
+		}
+		
+		// 处理 SSE 格式: "event: xxx" 或 "data: xxx"
+		if strings.HasPrefix(line, "event: ") {
+			eventType := strings.TrimPrefix(line, "event: ")
+			
+			// 读取下一行的 data
+			if scanner.Scan() {
+				dataLine := scanner.Text()
+				if strings.HasPrefix(dataLine, "data: ") {
+					data := strings.TrimPrefix(dataLine, "data: ")
+					
+					// 转换为 OpenAI 格式
+					if openaiData, err := convertAnthropicStreamToOpenAI(eventType, data, model); err == nil && openaiData != "" {
+						fmt.Fprintf(w, "data: %s\n\n", openaiData)
+						flusher.Flush()
+					}
+				}
+			}
+		}
+	}
+	
+	// 发送结束标记
+	fmt.Fprint(w, "data: [DONE]\n\n")
+	flusher.Flush()
+	
+	if err := scanner.Err(); err != nil {
+		log.Printf("流式读取错误: %v", err)
+	}
+}
+
 // OpenAI兼容的chat completions端点
 func chatCompletionsHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("收到OpenAI格式请求: %s %s", r.Method, r.URL.Path)
@@ -222,7 +373,18 @@ func chatCompletionsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("OpenAI请求: model=%v, messages数量=%d", openaiReq["model"], len(openaiReq["messages"].([]interface{})))
+	// 检查是否为流式请求
+	isStream := false
+	if stream, ok := openaiReq["stream"].(bool); ok {
+		isStream = stream
+	}
+	
+	modelName := ""
+	if model, ok := openaiReq["model"].(string); ok {
+		modelName = model
+	}
+
+	log.Printf("OpenAI请求: model=%v, messages数量=%d, stream=%v", modelName, len(openaiReq["messages"].([]interface{})), isStream)
 
 	// 转换为Anthropic格式
 	anthropicReq := convertOpenAIToAnthropic(openaiReq)
@@ -233,7 +395,7 @@ func chatCompletionsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("已转换为Anthropic格式，请求体大小: %d bytes", len(anthropicBody))
+	log.Printf("已转换为Anthropic格式，请求体大小: %d bytes, stream=%v", len(anthropicBody), isStream)
 
 	// 创建代理请求
 	proxyReq, err := http.NewRequest("POST", config.AnthropicTarget, bytes.NewBuffer(anthropicBody))
@@ -252,7 +414,11 @@ func chatCompletionsHandler(w http.ResponseWriter, r *http.Request) {
 	proxyReq.Header.Set("x-forwarded-proto", "http")
 
 	// 发送请求
-	client := &http.Client{Timeout: 30 * time.Second}
+	timeout := 30 * time.Second
+	if isStream {
+		timeout = 300 * time.Second // 流式请求使用更长的超时时间
+	}
+	client := &http.Client{Timeout: timeout}
 	log.Printf("发送请求到Anthropic API...")
 	resp, err := client.Do(proxyReq)
 	if err != nil {
@@ -264,16 +430,9 @@ func chatCompletionsHandler(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("收到响应: 状态码 %d", resp.StatusCode)
 
-	// 读取Anthropic响应
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.Printf("错误: 读取响应体失败: %v", err)
-		http.Error(w, `{"error": {"message": "Failed to read response", "type": "server_error"}}`, http.StatusInternalServerError)
-		return
-	}
-
-	// 如果不是200，直接返回错误
+	// 如果不是200，返回错误
 	if resp.StatusCode != http.StatusOK {
+		respBody, _ := io.ReadAll(resp.Body)
 		log.Printf("Anthropic API返回错误: %d, %s", resp.StatusCode, string(respBody))
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(resp.StatusCode)
@@ -294,23 +453,38 @@ func chatCompletionsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 解析Anthropic响应
-	var anthropicResp map[string]interface{}
-	if err := json.Unmarshal(respBody, &anthropicResp); err != nil {
-		log.Printf("错误: 解析Anthropic响应失败: %v", err)
-		http.Error(w, `{"error": {"message": "Failed to parse response", "type": "server_error"}}`, http.StatusInternalServerError)
-		return
+	// 根据是否流式选择不同的处理方式
+	if isStream {
+		log.Printf("开始流式响应处理")
+		handleStreamResponse(w, resp, modelName)
+		log.Printf("流式响应处理完成")
+	} else {
+		// 非流式：读取完整响应
+		respBody, err := io.ReadAll(resp.Body)
+		if err != nil {
+			log.Printf("错误: 读取响应体失败: %v", err)
+			http.Error(w, `{"error": {"message": "Failed to read response", "type": "server_error"}}`, http.StatusInternalServerError)
+			return
+		}
+
+		// 解析Anthropic响应
+		var anthropicResp map[string]interface{}
+		if err := json.Unmarshal(respBody, &anthropicResp); err != nil {
+			log.Printf("错误: 解析Anthropic响应失败: %v", err)
+			http.Error(w, `{"error": {"message": "Failed to parse response", "type": "server_error"}}`, http.StatusInternalServerError)
+			return
+		}
+
+		// 转换为OpenAI格式
+		openaiResp := convertAnthropicToOpenAI(anthropicResp)
+
+		log.Printf("已转换为OpenAI格式，返回响应")
+
+		// 返回OpenAI格式响应
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(openaiResp)
 	}
-
-	// 转换为OpenAI格式
-	openaiResp := convertAnthropicToOpenAI(anthropicResp)
-
-	log.Printf("已转换为OpenAI格式，返回响应")
-
-	// 返回OpenAI格式响应
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(openaiResp)
 }
 
 // 健康检查端点

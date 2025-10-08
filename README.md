@@ -32,7 +32,8 @@ Factory Proxy 是一个用 Go 语言编写的高性能代理服务器，专为 F
 ### 核心功能
 - ⚡ **极致性能** - Go 原生实现，启动 < 10ms，内存占用 ~11MB
 - 🔄 **格式转换** - 自动转换 OpenAI ↔ Anthropic 格式
-- 🔐 **API Key 代理** - 双 Key 机制保护源头 API Key 🆕
+- 🌊 **流式响应** - 支持 SSE 流式和非流式响应 🆕
+- 🔐 **API Key 代理** - 双 Key 机制保护源头 API Key
 - 🔐 **认证处理** - 支持 Bearer Token 和 API Key 认证
 - 🎯 **智能路由** - 自动注入 Factory Droid system prompt
 - 📊 **详细日志** - 完整的请求/响应日志记录
@@ -84,6 +85,7 @@ PORT=8003 ./factory-proxy-openai
 
 #### 2. 使用 Python OpenAI SDK
 
+**非流式响应**:
 ```python
 from openai import OpenAI
 
@@ -98,14 +100,32 @@ response = client.chat.completions.create(
         {"role": "system", "content": "You are a helpful assistant."},
         {"role": "user", "content": "Hello!"}
     ],
-    max_tokens=100
+    max_tokens=100,
+    stream=False  # 非流式
 )
 
 print(response.choices[0].message.content)
 ```
 
+**流式响应** 🆕:
+```python
+stream = client.chat.completions.create(
+    model="claude-sonnet-4-5-20250929",
+    messages=[
+        {"role": "user", "content": "写一个 Python Hello World 程序"}
+    ],
+    max_tokens=500,
+    stream=True  # 启用流式
+)
+
+for chunk in stream:
+    if chunk.choices[0].delta.content:
+        print(chunk.choices[0].delta.content, end="", flush=True)
+```
+
 #### 3. 使用 curl
 
+**非流式**:
 ```bash
 curl -X POST http://localhost:8003/v1/chat/completions \
   -H "Content-Type: application/json" \
@@ -113,8 +133,23 @@ curl -X POST http://localhost:8003/v1/chat/completions \
   -d '{
     "model": "claude-sonnet-4-5-20250929",
     "messages": [{"role": "user", "content": "Hello!"}],
-    "max_tokens": 100
+    "max_tokens": 100,
+    "stream": false
   }'
+```
+
+**流式** 🆕:
+```bash
+curl -X POST http://localhost:8003/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_PROXY_API_KEY" \
+  -d '{
+    "model": "claude-sonnet-4-5-20250929",
+    "messages": [{"role": "user", "content": "Hello!"}],
+    "max_tokens": 100,
+    "stream": true
+  }' \
+  --no-buffer
 ```
 
 响应（标准 OpenAI 格式）：
@@ -159,7 +194,8 @@ curl -X POST http://localhost:8001/anthropic/v1/messages \
 
 ## 📚 文档
 
-- [🔐 API Key 代理功能](API-KEY-PROXY.md) - 双 Key 机制保护源头 API Key 🆕
+- [🌊 流式响应功能](STREAMING.md) - SSE 流式和非流式完整指南 🆕
+- [🔐 API Key 代理功能](API-KEY-PROXY.md) - 双 Key 机制保护源头 API Key
 - [OpenAI 兼容模式完整文档](README-OpenAI.md) - 详细的 OpenAI 兼容接口说明
 - [快速开始指南](QUICK_START.md) - 5分钟快速上手
 - [支持的模型列表](MODELS.md) - 25+ 模型完整列表 ⭐
@@ -356,6 +392,7 @@ sudo systemctl status factory-proxy
 
 ### Node.js
 
+**非流式**:
 ```javascript
 import OpenAI from 'openai';
 
@@ -370,14 +407,34 @@ const response = await client.chat.completions.create({
     { role: 'system', content: 'You are a helpful assistant.' },
     { role: 'user', content: 'Hello!' }
   ],
-  max_tokens: 100
+  max_tokens: 100,
+  stream: false
 });
 
 console.log(response.choices[0].message.content);
 ```
 
+**流式** 🆕:
+```javascript
+const stream = await client.chat.completions.create({
+  model: 'claude-sonnet-4-5-20250929',
+  messages: [
+    { role: 'user', content: 'Write a Hello World in JavaScript' }
+  ],
+  max_tokens: 500,
+  stream: true
+});
+
+for await (const chunk of stream) {
+  if (chunk.choices[0]?.delta?.content) {
+    process.stdout.write(chunk.choices[0].delta.content);
+  }
+}
+```
+
 ### Python
 
+**非流式**:
 ```python
 from openai import OpenAI
 import os
@@ -393,10 +450,27 @@ response = client.chat.completions.create(
         {"role": "system", "content": "You are a helpful assistant."},
         {"role": "user", "content": "Hello!"}
     ],
-    max_tokens=100
+    max_tokens=100,
+    stream=False
 )
 
 print(response.choices[0].message.content)
+```
+
+**流式** 🆕:
+```python
+stream = client.chat.completions.create(
+    model="claude-sonnet-4-5-20250929",
+    messages=[
+        {"role": "user", "content": "Write a Hello World in Python"}
+    ],
+    max_tokens=500,
+    stream=True
+)
+
+for chunk in stream:
+    if chunk.choices[0].delta.content:
+        print(chunk.choices[0].delta.content, end="", flush=True)
 ```
 
 ## 🔐 安全建议
