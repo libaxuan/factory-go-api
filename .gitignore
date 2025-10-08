@@ -51,7 +51,6 @@ build/
 # PID files
 *.pid
 
-# Python test files
-test_*.py
+# Python cache
 __pycache__/
 *.pyc
