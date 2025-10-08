@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # Anthropic 原生模式
+  factory-proxy-anthropic:
+    build:
+      context: .
+      target: anthropic
+    container_name: factory-proxy-anthropic
+    ports:
+      - "8001:8000"
+    environment:
+      - PORT=8000
+      - ANTHROPIC_TARGET_URL=${ANTHROPIC_TARGET_URL:-https://gibuoilncyzqebelqjqz.supabase.co/functions/v1/smooth-handler/https://app.factory.ai/api/llm/a/v1/messages}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    networks:
+      - factory-network
+
+  # OpenAI 兼容模式
+  factory-proxy-openai:
+    build:
+      context: .
+      target: openai
+    container_name: factory-proxy-openai
+    ports:
+      - "8003:8003"
+    environment:
+      - PORT=8003
+      - ANTHROPIC_TARGET_URL=${ANTHROPIC_TARGET_URL:-https://gibuoilncyzqebelqjqz.supabase.co/functions/v1/smooth-handler/https://app.factory.ai/api/llm/a/v1/messages}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8003/v1/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    networks:
+      - factory-network
+
+networks:
+  factory-network:
+    driver: bridge
