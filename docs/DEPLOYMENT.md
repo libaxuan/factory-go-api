@@ -601,7 +601,7 @@ LOG_LEVEL=info
 
 - [快速开始](QUICK_START.md) - 5分钟快速上手
 - [启动脚本使用](START.md) - start.sh 详细说明
-- [支持的模型](MODELS.md) - 25+ 模型列表
+- [支持的模型](SUPPORTED_MODELS.md) - 已测试可用的模型列表
 - [完整文档](README.md) - 项目主文档
 
 ---

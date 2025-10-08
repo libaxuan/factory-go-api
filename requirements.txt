@@ -1,4 +1,0 @@
-# Factory Proxy API Python 测试依赖
-# 安装: pip install -r requirements.txt
-
-openai>=1.0.0

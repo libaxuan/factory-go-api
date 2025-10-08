@@ -204,7 +204,7 @@ chmod +x start.sh
 
 - 
 [快速开始](QUICK_START.md) - 5分钟快速上手
-- [支持的模型](MODELS.md) - 25+ 模型列表
+- [支持的模型](SUPPORTED_MODELS.md) - 已测试可用的模型列表
 - [完整文档](README.md) - 项目主文档
 - [OpenAI 模式详解](README-OpenAI.md) - OpenAI 兼容接口
 
