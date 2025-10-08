@@ -13,7 +13,7 @@
 ### 核心功能
 - **[流式响应功能](STREAMING.md)** 🆕 - SSE 流式和非流式完整指南
 - **[API Key 代理](API-KEY-PROXY.md)** - 双 Key 机制保护源头 API Key
-- **[支持的模型](MODELS.md)** - 25+ 模型完整列表和使用建议
+- **[支持的模型](SUPPORTED_MODELS.md)** ⭐ - 已测试可用的模型列表（真实测试）
 
 ---
 
@@ -49,11 +49,10 @@
 - [最佳实践](STREAMING.md#最佳实践)
 
 #### 🤖 模型支持
-- [Claude 系列](MODELS.md#claude-系列)
-- [GPT 系列](MODELS.md#gpt-系列)
-- [Gemini 系列](MODELS.md#gemini-系列)
-- [其他模型](MODELS.md#其他模型)
-- [场景推荐](MODELS.md#使用场景推荐)
+- [已测试可用模型](SUPPORTED_MODELS.md#当前支持的模型)
+- [测试失败的模型](SUPPORTED_MODELS.md#测试失败的模型)
+- [问题分析](SUPPORTED_MODELS.md#问题分析)
+- [使用建议](SUPPORTED_MODELS.md#使用建议)
 
 #### 🚢 部署方式
 - [本地部署](DEPLOYMENT.md#本地部署)
@@ -72,7 +71,7 @@
 查看 [流式响应功能](STREAMING.md)，包含 Python、Node.js、cURL 的完整示例。
 
 ### 支持哪些模型？
-查看 [支持的模型](MODELS.md)，包含 25+ 模型的完整列表和使用建议。
+查看 [支持的模型](SUPPORTED_MODELS.md)，包含真实测试的模型列表和可用性分析。
 
 ### 如何保护 API Key？
 查看 [API Key 代理](API-KEY-PROXY.md)，使用双 Key 机制保护源头 API Key。
