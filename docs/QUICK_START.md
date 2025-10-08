@@ -6,7 +6,7 @@
 ### 步骤 1: 获取代码
 
 ```bash
-git clone https://github.com/yourusername/factory-proxy.git
+git clone https://github.com/libaxuan/factory-proxy.git
 cd factory-proxy/factory-go-api
 ```
 
@@ -291,7 +291,7 @@ make build-openai
 
 2. 尝试使用 Python/Node.js SDK
 3. 部署到生产环境
-4. 查看 [GitHub Issues](https://github.com/yourusername/factory-proxy/issues) 参与讨论
+4. 查看 [GitHub Issues](https://github.com/libaxuan/factory-proxy/issues) 参与讨论
 
 ---
 

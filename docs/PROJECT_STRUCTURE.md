@@ -140,7 +140,7 @@ make help           # 帮助
 
 ```bash
 # 1. 克隆项目
-git clone https://github.com/yourusername/factory-proxy.git
+git clone https://github.com/libaxuan/factory-proxy.git
 cd factory-proxy/factory-go
 
 # 2. 安装依赖

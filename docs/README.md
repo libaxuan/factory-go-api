@@ -84,8 +84,8 @@
 
 ## 📞 获取帮助
 
-- 📝 **问题反馈**: [GitHub Issues](https://github.com/yourusername/factory-proxy/issues)
-- 💬 **讨论交流**: [GitHub Discussions](https://github.com/yourusername/factory-proxy/discussions)
+- 📝 **问题反馈**: [GitHub Issues](https://github.com/libaxuan/factory-proxy/issues)
+- 💬 **讨论交流**: [GitHub Discussions](https://github.com/libaxuan/factory-proxy/discussions)
 - 📧 **邮件联系**: your-email@example.com
 
 ---

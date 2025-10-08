@@ -52,7 +52,7 @@ Factory Proxy 是一个用 Go 语言编写的高性能代理服务器，专为 F
 
 ```bash
 # 克隆仓库
-git clone https://github.com/yourusername/factory-proxy.git
+git clone https://github.com/libaxuan/factory-proxy.git
 cd factory-proxy/factory-go-api
 
 # 配置环境变量
@@ -293,7 +293,7 @@ factory-go/
 
 ```bash
 # 克隆项目
-git clone https://github.com/yourusername/factory-proxy.git
+git clone https://github.com/libaxuan/factory-proxy.git
 cd factory-proxy/factory-go
 
 # 安装依赖
@@ -546,9 +546,9 @@ curl -I https://your-target-endpoint.com
 
 感谢所有贡献者！
 
-<a href="https://github.com/yourusername/factory-proxy/graphs/contributors">
+<a href="https://github.com/libaxuan/factory-proxy/graphs/contributors">
   
-  <img src="https://contrib.rocks/image?repo=yourusername/factory-proxy" />
+  <img src="https://contrib.rocks/image?repo=libaxuan/factory-proxy" />
 </a>
 
 ## 📄 许可证
@@ -565,12 +565,12 @@ curl -I https://your-target-endpoint.com
 
 如果这个项目对你有帮助，请给我们一个 Star！
 
-[![Star History Chart](https://api.star-history.com/svg?repos=yourusername/factory-proxy&type=Date)](https://star-history.com/#yourusername/factory-proxy&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=libaxuan/factory-proxy&type=Date)](https://star-history.com/#libaxuan/factory-proxy&Date)
 
 ## 📮 联系方式
 
-- Issues: [GitHub Issues](https://github.com/yourusername/factory-proxy/issues)
-- Discussions: [GitHub Discussions](https://github.com/yourusername/factory-proxy/discussions)
+- Issues: [GitHub Issues](https://github.com/libaxuan/factory-proxy/issues)
+- Discussions: [GitHub Discussions](https://github.com/libaxuan/factory-proxy/discussions)
 
 ---
 
