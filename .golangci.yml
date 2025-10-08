@@ -1,0 +1,26 @@
+run:
+  timeout: 5m
+  tests: true
+  build-tags:
+    - ""
+    - openai
+
+linters:
+  enable:
+    - errcheck
+    - govet
+    - unused
+    - staticcheck
+    - gosimple
+    - ineffassign
+    - typecheck
+
+linters-settings:
+  errcheck:
+    check-blank: false
+    check-type-assertions: false
+  
+issues:
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0
