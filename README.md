@@ -153,17 +153,36 @@ curl -X POST http://localhost:8001/anthropic/v1/messages \
 ## 📚 文档
 
 - [OpenAI 兼容模式完整文档](README-OpenAI.md) - 详细的 OpenAI 兼容接口说明
+- [快速开始指南](QUICK_START.md) - 5分钟快速上手
+- [支持的模型列表](MODELS.md) - 25+ 模型完整列表 ⭐
+- [项目结构说明](PROJECT_STRUCTURE.md) - 代码架构详解
 - [贡献指南](CONTRIBUTING.md) - 如何参与项目开发
+- [更新日志](CHANGELOG.md) - 版本更新记录
 - [许可证](LICENSE) - MIT License
 
 ## 🎯 支持的模型
 
-所有 Factory AI 支持的 Claude 模型：
+支持 **25+ 种模型**，包括：
 
-- `claude-sonnet-4-5-20250929`
-- `claude-sonnet-3-5-20240620`
-- `claude-opus-4-20250514`
-- 以及其他 Factory 支持的模型
+### Claude 系列
+- `claude-sonnet-4-5-20250929` ⭐ 推荐
+- `claude-opus-4-1-20250805` - 最强推理
+- `claude-3-7-sonnet-20250219`
+- `claude-3-5-sonnet-20241022`
+- `claude-3-5-haiku-20241022`
+
+### GPT 系列
+- `gpt-5-2025-08-07` - GPT-5 标准版
+- `gpt-5-codex` - 代码专用
+- `gpt-4o`, `gpt-4.1`
+- `o1`, `o3`, `o4-mini`
+
+### 其他模型
+- `gemini-2.5-pro`, `gemini-2.5-flash` - Google Gemini
+- `grok-4` - xAI Grok
+- `glm-4.6` - 智谱 GLM
+
+**查看完整列表**: [MODELS.md](MODELS.md) 📋
 
 ## ⚙️ 配置
 
