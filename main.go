@@ -215,7 +215,7 @@ func proxyHandler(targetURL, serviceType string) http.HandlerFunc {
 
 		// 发送请求
 		client := &http.Client{
-			Timeout: 30 * time.Second,
+			Timeout: 60 * time.Second, // 增加到 60 秒以支持大上下文处理
 		}
 
 		log.Printf("发送请求到: %s", target.String())
@@ -359,8 +359,8 @@ func main() {
 	server := &http.Server{
 		Addr:         ":" + config.Port,
 		Handler:      handler,
-		ReadTimeout:  30 * time.Second,
-		WriteTimeout: 30 * time.Second,
+		ReadTimeout:  60 * time.Second,
+		WriteTimeout: 200 * time.Second, // 写入超时设置为 200 秒以支持流式响应
 		IdleTimeout:  60 * time.Second,
 	}
 

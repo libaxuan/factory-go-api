@@ -129,7 +129,9 @@ func convertOpenAIToAnthropic(openaiBody map[string]interface{}) map[string]inte
 	if maxTokens, ok := openaiBody["max_tokens"].(float64); ok {
 		anthropicBody["max_tokens"] = int(maxTokens)
 	} else {
-		anthropicBody["max_tokens"] = 1024
+		// Claude Sonnet 4.5 支持最大 150万 tokens 输出
+		// 设置默认值为 100000 以充分利用大上下文能力
+		anthropicBody["max_tokens"] = 100000
 	}
 
 	// 转换temperature
@@ -450,9 +452,9 @@ func chatCompletionsHandler(w http.ResponseWriter, r *http.Request) {
 	proxyReq.Header.Set("x-forwarded-proto", "http")
 
 	// 发送请求
-	timeout := 30 * time.Second
+	timeout := 60 * time.Second
 	if isStream {
-		timeout = 300 * time.Second // 流式请求使用更长的超时时间
+		timeout = 200 * time.Second // 流式请求使用更长的超时时间
 	}
 	client := &http.Client{Timeout: timeout}
 	log.Printf("发送请求到Anthropic API...")
@@ -904,8 +906,8 @@ func main() {
 	server := &http.Server{
 		Addr:         ":" + config.Port,
 		Handler:      handler,
-		ReadTimeout:  30 * time.Second,
-		WriteTimeout: 30 * time.Second,
+		ReadTimeout:  60 * time.Second,
+		WriteTimeout: 200 * time.Second, // 写入超时设置为 200 秒以支持流式响应
 		IdleTimeout:  60 * time.Second,
 	}
 
