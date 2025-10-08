@@ -201,7 +201,6 @@ curl -X POST http://localhost:8001/anthropic/v1/messages \
 - [📦 OpenAI 兼容模式](docs/README-OpenAI.md) - 详细的 OpenAI 兼容接口说明
 
 ### 参考文档
-- [📋 支持的模型](docs/MODELS.md) - 25+ 模型完整列表 ⭐
 - [🚢 部署指南](docs/DEPLOYMENT.md) - 生产环境部署
 - [🏗️ 项目结构](docs/PROJECT_STRUCTURE.md) - 代码架构详解
 
@@ -212,27 +211,13 @@ curl -X POST http://localhost:8001/anthropic/v1/messages \
 
 ## 🎯 支持的模型
 
-支持 **25+ 种模型**，包括：
+**仅支持 Claude 系列模型**，目前提供以下 2 个型号：
 
 ### Claude 系列
-- `claude-sonnet-4-5-20250929` ⭐ 推荐
-- `claude-opus-4-1-20250805` - 最强推理
-- `claude-3-7-sonnet-20250219`
-- `claude-3-5-sonnet-20241022`
-- `claude-3-5-haiku-20241022`
+- `claude-sonnet-4-5-20250929` ⭐ - Claude 4.5 Sonnet (推荐)
+- `claude-opus-4-1-20250805` 🧠 - Claude Opus 4 (最强推理)
 
-### GPT 系列
-- `gpt-5-2025-08-07` - GPT-5 标准版
-- `gpt-5-codex` - 代码专用
-- `gpt-4o`, `gpt-4.1`
-- `o1`, `o3`, `o4-mini`
-
-### 其他模型
-- `gemini-2.5-pro`, `gemini-2.5-flash` - Google Gemini
-- `grok-4` - xAI Grok
-- `glm-4.6` - 智谱 GLM
-
-**查看完整列表**: [MODELS.md](MODELS.md) 📋
+> 💡 **说明**: 本服务专注于提供 Claude 系列模型，确保最佳性能和稳定性。
 
 ## ⚙️ 配置
 

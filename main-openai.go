@@ -32,11 +32,10 @@ var config = Config{
 	BaseURL:       getEnv("FACTORY_BASE_URL", "https://gibuoilncyzqebelqjqz.supabase.co/functions/v1/smooth-handler/https://app.factory.ai"),
 }
 
-// 支持的 Claude 模型（经过真实测试验证）
+// 支持的 Claude 模型（仅支持 Claude 系列）
 var supportedModels = map[string]bool{
-	"claude-3-7-sonnet-20250219": true,
-	"claude-sonnet-4-20250514":   true,
-	"claude-sonnet-4-5-20250929": true,
+	"claude-sonnet-4-5-20250929": true, // Claude 4.5 Sonnet - 推荐
+	"claude-opus-4-1-20250805":   true, // Claude Opus 4 - 最强推理
 }
 
 // 验证模型是否支持
@@ -426,7 +425,7 @@ func chatCompletionsHandler(w http.ResponseWriter, r *http.Request) {
 	// 验证模型是否支持
 	if !isModelSupported(modelName) {
 		log.Printf("错误: 不支持的模型: %s", modelName)
-		http.Error(w, fmt.Sprintf(`{"error": {"message": "Unsupported model: %s. Supported models: claude-3-7-sonnet-20250219, claude-sonnet-4-20250514, claude-sonnet-4-5-20250929", "type": "invalid_request_error"}}`, modelName), http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf(`{"error": {"message": "Unsupported model: %s. Supported models: claude-sonnet-4-5-20250929 (推荐), claude-opus-4-1-20250805 (最强推理)", "type": "invalid_request_error"}}`, modelName), http.StatusBadRequest)
 		return
 	}
 
@@ -710,15 +709,13 @@ func getEmbeddedDocs() string {
 
             <div class="section">
                 <h2>🤖 支持的模型</h2>
-                <p>经过 <strong>真实测试验证</strong>，目前支持以下 3 个 Claude 模型：</p>
+                <p><strong>仅支持 Claude 系列模型</strong>，目前提供以下 2 个型号：</p>
                 <ul style="margin-left: 20px; margin-top: 10px;">
-                    <li><code>claude-sonnet-4-5-20250929</code> ⭐ - Claude 4.5 Sonnet (强烈推荐)</li>
-                    <li><code>claude-sonnet-4-20250514</code> - Claude Sonnet 4</li>
-                    <li><code>claude-3-7-sonnet-20250219</code> - Claude 3.7 Sonnet</li>
+                    <li><code>claude-sonnet-4-5-20250929</code> ⭐ - Claude 4.5 Sonnet (推荐)</li>
+                    <li><code>claude-opus-4-1-20250805</code> 🧠 - Claude Opus 4 (最强推理)</li>
                 </ul>
-                <p style="margin-top: 15px; padding: 10px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
-                    💡 <strong>注意</strong>: 经过 2025-10-08 真实 API 测试，Factory AI 目前仅这 3 个模型可用。<br>
-                    详细测试结果请查看 <a href="https://github.com/libaxuan/factory-go-api/blob/main/docs/MODELS.md" target="_blank" style="color: #d97706;">MODELS.md</a>
+                <p style="margin-top: 15px; padding: 10px; background: #dbeafe; border-left: 4px solid #3b82f6; border-radius: 4px;">
+                    💡 <strong>说明</strong>: 本服务专注于提供 Claude 系列模型，确保最佳性能和稳定性。
                 </p>
             </div>
 
@@ -891,10 +888,9 @@ func main() {
 	log.Printf("🔐 API Key 代理: 已启用")
 	log.Printf("   - 对外 Key: %s***", config.ProxyAPIKey[:min(8, len(config.ProxyAPIKey))])
 	log.Printf("   - 源头 Key: %s***", config.FactoryAPIKey[:min(8, len(config.FactoryAPIKey))])
-	log.Printf("🤖 支持的模型 (已验证可用):")
-	log.Printf("   - claude-3-7-sonnet-20250219")
-	log.Printf("   - claude-sonnet-4-20250514")
-	log.Printf("   - claude-sonnet-4-5-20250929 (推荐)")
+	log.Printf("🤖 支持的模型 (仅 Claude 系列):")
+	log.Printf("   - claude-sonnet-4-5-20250929 ⭐ (推荐)")
+	log.Printf("   - claude-opus-4-1-20250805 🧠 (最强推理)")
 	log.Printf("📡 API 端点: /api/llm/a/v1/messages (Anthropic Messages API)")
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
