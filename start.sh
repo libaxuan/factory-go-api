@@ -79,7 +79,7 @@ if [ $? -eq 0 ]; then
         echo "   - 健康检查:  http://localhost:$PORT/health"
         echo ""
         echo "🔑 认证方式:"
-        echo "   x-api-key: YOUR_FACTORY_API_KEY"
+        echo "   x-api-key: YOUR_PROXY_API_KEY"
     else
         echo "📋 API 端点 (OpenAI 兼容模式) ⭐:"
         echo "   - Chat:      http://localhost:$PORT/v1/chat/completions"

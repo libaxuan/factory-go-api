@@ -214,7 +214,7 @@ export $(cat .env | xargs)
 
 **认证：**
 ```bash
-Authorization: Bearer YOUR_FACTORY_API_KEY
+Authorization: Bearer YOUR_PROXY_API_KEY
 ```
 
 ### Anthropic 原生模式
@@ -229,7 +229,7 @@ Authorization: Bearer YOUR_FACTORY_API_KEY
 
 **认证：**
 ```bash
-x-api-key: YOUR_FACTORY_API_KEY
+x-api-key: YOUR_PROXY_API_KEY
 ```
 
 ## 🆘 常见问题

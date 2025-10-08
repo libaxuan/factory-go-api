@@ -147,7 +147,7 @@ PORT=8001 ./factory-proxy
 # 调用 API
 curl -X POST http://localhost:8001/anthropic/v1/messages \
   -H "Content-Type: application/json" \
-  -H "x-api-key: YOUR_FACTORY_API_KEY" \
+  -H "x-api-key: YOUR_PROXY_API_KEY" \
   -d '{
     "model": "claude-sonnet-4-5-20250929",
     "messages": [{"role": "user", "content": "Hello"}],

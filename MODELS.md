@@ -84,7 +84,7 @@ Factory Proxy API 支持以下所有模型。您可以在请求中使用任何�
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="YOUR_FACTORY_API_KEY",
+    api_key="YOUR_PROXY_API_KEY",  # 使用代理 Key
     base_url="http://localhost:8003/v1"
 )
 
@@ -119,7 +119,7 @@ response = client.chat.completions.create(
 # Claude Sonnet 4.5
 curl -X POST http://localhost:8003/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_FACTORY_API_KEY" \
+  -H "Authorization: Bearer YOUR_PROXY_API_KEY" \
   -d '{
     "model": "claude-sonnet-4-5-20250929",
     "messages": [{"role": "user", "content": "Hello!"}]
@@ -128,7 +128,7 @@ curl -X POST http://localhost:8003/v1/chat/completions \
 # GPT-5 Mini
 curl -X POST http://localhost:8003/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_FACTORY_API_KEY" \
+  -H "Authorization: Bearer YOUR_PROXY_API_KEY" \
   -d '{
     "model": "gpt-5-mini-2025-08-07",
     "messages": [{"role": "user", "content": "Hello!"}]
@@ -137,7 +137,7 @@ curl -X POST http://localhost:8003/v1/chat/completions \
 # Grok 4
 curl -X POST http://localhost:8003/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_FACTORY_API_KEY" \
+  -H "Authorization: Bearer YOUR_PROXY_API_KEY" \
   -d '{
     "model": "grok-4",
     "messages": [{"role": "user", "content": "Hello!"}]
@@ -150,7 +150,7 @@ curl -X POST http://localhost:8003/v1/chat/completions \
 import OpenAI from 'openai';
 
 const client = new OpenAI({
-  apiKey: process.env.FACTORY_API_KEY,
+  apiKey: process.env.PROXY_API_KEY,  // 使用代理 Key
   baseURL: 'http://localhost:8003/v1'
 });
 

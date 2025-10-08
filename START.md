@@ -70,7 +70,7 @@ Factory Proxy API 提供了便捷的启动脚本 `start.sh`，支持两种运行
    - 健康检查:  http://localhost:8000/health
 
 🔑 认证方式:
-   x-api-key: YOUR_FACTORY_API_KEY
+   x-api-key: YOUR_PROXY_API_KEY
 
 ⏳ 启动服务器...
 ==================================
@@ -135,7 +135,7 @@ curl http://localhost:8000/health
 # 3. 测试 Anthropic API
 curl -X POST http://localhost:8000/anthropic/v1/messages \
   -H "Content-Type: application/json" \
-  -H "x-api-key: YOUR_FACTORY_API_KEY" \
+  -H "x-api-key: YOUR_PROXY_API_KEY" \
   -d '{
     "model": "claude-sonnet-4-5-20250929",
     "messages": [{"role": "user", "content": "Hello!"}],
