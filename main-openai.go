@@ -302,6 +302,7 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
 		"uptime":    time.Since(startTime).Seconds(),
 	})
+}
 
 // API 文档端点
 func docsHandler(w http.ResponseWriter, r *http.Request) {
@@ -537,7 +538,6 @@ console.log(response.choices[0].message.content);</pre>
     </div>
 </body>
 </html>`
-} 
 }
 
 func main() {

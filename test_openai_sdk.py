@@ -13,7 +13,7 @@ def test_basic_chat():
     print("-" * 50)
     
     client = OpenAI(
-        api_key="fk-nTguzhIlSN1ktwFcxpf4-F0-oI3x_rsDHXXaxL0XQzQeoN97tJM1TIsOy5BmpsJ4",
+        api_key="your-factory-key",
         base_url="http://localhost:8003/v1"
     )
     
@@ -42,7 +42,7 @@ def test_with_system():
     print("-" * 50)
     
     client = OpenAI(
-        api_key="fk-nTguzhIlSN1ktwFcxpf4-F0-oI3x_rsDHXXaxL0XQzQeoN97tJM1TIsOy5BmpsJ4",
+        api_key="your-factory-key",
         base_url="http://localhost:8003/v1"
     )
     
@@ -71,7 +71,7 @@ def test_multi_turn():
     print("-" * 50)
     
     client = OpenAI(
-        api_key="fk-nTguzhIlSN1ktwFcxpf4-F0-oI3x_rsDHXXaxL0XQzQeoN97tJM1TIsOy5BmpsJ4",
+        api_key="your-factory-key",
         base_url="http://localhost:8003/v1"
     )
     
