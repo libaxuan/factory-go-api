@@ -25,8 +25,8 @@ type Config struct {
 var config = Config{
 	Port:            getEnv("PORT", "8000"),
 	AnthropicTarget: getEnv("ANTHROPIC_TARGET_URL", "https://gibuoilncyzqebelqjqz.supabase.co/functions/v1/smooth-handler/https://app.factory.ai/api/llm/a/v1/messages"),
-	FactoryAPIKey:   os.Getenv("FACTORY_API_KEY"),   // 必须配置
-	ProxyAPIKey:     os.Getenv("PROXY_API_KEY"),     // 必须配置
+	FactoryAPIKey:   os.Getenv("FACTORY_API_KEY"), // 必须配置
+	ProxyAPIKey:     os.Getenv("PROXY_API_KEY"),   // 必须配置
 }
 
 var startTime = time.Now()
@@ -193,7 +193,7 @@ func convertAnthropicStreamToOpenAI(eventType, data, model string) (string, erro
 		if err := json.Unmarshal([]byte(data), &msgStart); err != nil {
 			return "", err
 		}
-		
+
 		response := map[string]interface{}{
 			"id":      msgStart["id"],
 			"object":  "chat.completion.chunk",
@@ -212,21 +212,21 @@ func convertAnthropicStreamToOpenAI(eventType, data, model string) (string, erro
 		jsonData, _ := json.Marshal(response)
 		return string(jsonData), nil
 	}
-	
+
 	if eventType == "content_block_delta" {
 		// 解析内容增量
 		var delta map[string]interface{}
 		if err := json.Unmarshal([]byte(data), &delta); err != nil {
 			return "", err
 		}
-		
+
 		text := ""
 		if deltaObj, ok := delta["delta"].(map[string]interface{}); ok {
 			if textVal, ok := deltaObj["text"].(string); ok {
 				text = textVal
 			}
 		}
-		
+
 		response := map[string]interface{}{
 			"id":      "chatcmpl-" + fmt.Sprintf("%d", time.Now().UnixNano()),
 			"object":  "chat.completion.chunk",
@@ -245,21 +245,21 @@ func convertAnthropicStreamToOpenAI(eventType, data, model string) (string, erro
 		jsonData, _ := json.Marshal(response)
 		return string(jsonData), nil
 	}
-	
+
 	if eventType == "message_delta" {
 		// 处理消息结束
 		var msgDelta map[string]interface{}
 		if err := json.Unmarshal([]byte(data), &msgDelta); err != nil {
 			return "", err
 		}
-		
+
 		finishReason := "stop"
 		if delta, ok := msgDelta["delta"].(map[string]interface{}); ok {
 			if stopReason, ok := delta["stop_reason"].(string); ok && stopReason == "max_tokens" {
 				finishReason = "length"
 			}
 		}
-		
+
 		response := map[string]interface{}{
 			"id":      "chatcmpl-" + fmt.Sprintf("%d", time.Now().UnixNano()),
 			"object":  "chat.completion.chunk",
@@ -276,7 +276,7 @@ func convertAnthropicStreamToOpenAI(eventType, data, model string) (string, erro
 		jsonData, _ := json.Marshal(response)
 		return string(jsonData), nil
 	}
-	
+
 	return "", nil
 }
 
@@ -287,35 +287,35 @@ func handleStreamResponse(w http.ResponseWriter, resp *http.Response, model stri
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
 	w.Header().Set("X-Accel-Buffering", "no")
-	
+
 	flusher, ok := w.(http.Flusher)
 	if !ok {
 		log.Printf("错误: 响应不支持流式传输")
 		http.Error(w, "Streaming not supported", http.StatusInternalServerError)
 		return
 	}
-	
+
 	scanner := bufio.NewScanner(resp.Body)
 	scanner.Split(bufio.ScanLines)
-	
+
 	for scanner.Scan() {
 		line := scanner.Text()
-		
+
 		// 跳过空行
 		if line == "" {
 			continue
 		}
-		
+
 		// 处理 SSE 格式: "event: xxx" 或 "data: xxx"
 		if strings.HasPrefix(line, "event: ") {
 			eventType := strings.TrimPrefix(line, "event: ")
-			
+
 			// 读取下一行的 data
 			if scanner.Scan() {
 				dataLine := scanner.Text()
 				if strings.HasPrefix(dataLine, "data: ") {
 					data := strings.TrimPrefix(dataLine, "data: ")
-					
+
 					// 转换为 OpenAI 格式
 					if openaiData, err := convertAnthropicStreamToOpenAI(eventType, data, model); err == nil && openaiData != "" {
 						fmt.Fprintf(w, "data: %s\n\n", openaiData)
@@ -325,11 +325,11 @@ func handleStreamResponse(w http.ResponseWriter, resp *http.Response, model stri
 			}
 		}
 	}
-	
+
 	// 发送结束标记
 	fmt.Fprint(w, "data: [DONE]\n\n")
 	flusher.Flush()
-	
+
 	if err := scanner.Err(); err != nil {
 		log.Printf("流式读取错误: %v", err)
 	}
@@ -385,7 +385,7 @@ func chatCompletionsHandler(w http.ResponseWriter, r *http.Request) {
 	if stream, ok := openaiReq["stream"].(bool); ok {
 		isStream = stream
 	}
-	
+
 	modelName := ""
 	if model, ok := openaiReq["model"].(string); ok {
 		modelName = model
