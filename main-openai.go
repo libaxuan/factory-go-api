@@ -722,6 +722,32 @@ for await (const chunk of stream) {
         process.stdout.write(chunk.choices[0].delta.content);
     }
 }</pre>
+
+                <h3 style="margin-top: 30px;">cURL</h3>
+                <h4 style="margin-top: 10px; color: #667eea;">💬 非流式</h4>
+                <pre>curl -X POST http://localhost:8003/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_PROXY_API_KEY" \
+  -d '{
+    "model": "claude-sonnet-4-5-20250929",
+    "messages": [{"role": "user", "content": "Hello!"}],
+    "max_tokens": 100,
+    "stream": false
+  }'</pre>
+
+                <h4 style="margin-top: 15px; color: #667eea;">🌊 流式</h4>
+                <pre>curl -N -X POST http://localhost:8003/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_PROXY_API_KEY" \
+  -d '{
+    "model": "claude-sonnet-4-5-20250929",
+    "messages": [{"role": "user", "content": "Hello!"}],
+    "max_tokens": 100,
+    "stream": true
+  }'</pre>
+                <p style="margin-top: 10px; color: #666; font-size: 0.9em;">
+                    💡 <code>-N</code> 或 <code>--no-buffer</code> 参数用于禁用缓冲，实时显示流式输出
+                </p>
             </div>
 
             <div class="section">
