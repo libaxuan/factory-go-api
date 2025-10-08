@@ -53,25 +53,16 @@ func (r *responseRecorder) WriteHeader(code int) {
 	r.ResponseWriter.WriteHeader(code)
 }
 
-// 日志中间件
-func loggingMiddleware(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
-		recorder := &responseRecorder{ResponseWriter: w, statusCode: http.StatusOK}
-		next.ServeHTTP(recorder, r)
-		duration := time.Since(start)
-		log.Printf("[%s] %s %s - %d - %v", r.Method, r.URL.Path, r.RemoteAddr, recorder.statusCode, duration)
-	}
-}
-
 // 健康检查端点
 func healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	if err := json.NewEncoder(w).Encode(map[string]interface{}{
 		"status":    "healthy",
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
 		"uptime":    time.Since(startTime).Seconds(),
-	})
+	}); err != nil {
+		log.Printf("错误: 编码响应失败: %v", err)
+	}
 }
 
 // 通用的代理请求处理
@@ -253,57 +244,6 @@ func proxyHandler(targetURL, serviceType string) http.HandlerFunc {
 	}
 }
 
-// 修改请求体（如果需要）
-func modifyRequestBody(req *http.Request, serviceType string) {
-	// 读取原始请求体
-	body, err := io.ReadAll(req.Body)
-	if err != nil || len(body) == 0 {
-		return
-	}
-	req.Body.Close()
-
-	var data map[string]interface{}
-	if err := json.Unmarshal(body, &data); err != nil {
-		return
-	}
-
-	// 根据服务类型修改请求体
-	switch serviceType {
-	case "anthropic", "bedrock":
-		// 处理 system 参数
-		if system, exists := data["system"]; exists {
-			if system == nil {
-				data["system"] = []map[string]interface{}{
-					{"type": "text", "text": "You are Droid, an AI software engineering agent built by Factory."},
-				}
-			} else if systemStr, ok := system.(string); ok {
-				data["system"] = []map[string]interface{}{
-					{"type": "text", "text": "You are Droid, an AI software engineering agent built by Factory."},
-					{"type": "text", "text": systemStr},
-				}
-			}
-		}
-	case "openai":
-		// 模型替换
-		if model, exists := data["model"]; exists {
-			if model == "gpt-5" {
-				data["model"] = "gpt-5-2025-08-07"
-			}
-		}
-		// 添加 instructions
-		data["instructions"] = "You are Droid, an AI software engineering agent built by Factory.\n"
-	}
-
-	// 重新编码请求体
-	newBody, err := json.Marshal(data)
-	if err != nil {
-		return
-	}
-
-	req.Body = io.NopCloser(bytes.NewReader(newBody))
-	req.ContentLength = int64(len(newBody))
-}
-
 func main() {
 	// 显示启动信息
 	log.Printf("🚀 Factory Go Proxy 启动中...")
@@ -334,18 +274,22 @@ func main() {
 		} else if path == "/" {
 			actualHandler = func(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				json.NewEncoder(w).Encode(map[string]string{
+				if err := json.NewEncoder(w).Encode(map[string]string{
 					"service": "Factory Go Proxy",
 					"version": "1.0",
-				})
+				}); err != nil {
+					log.Printf("错误: 编码响应失败: %v", err)
+				}
 			}
 		} else {
 			actualHandler = func(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusNotFound)
-				json.NewEncoder(w).Encode(map[string]string{
+				if err := json.NewEncoder(w).Encode(map[string]string{
 					"error": "无效的端点。请使用 /anthropic/, /openai/, /bedrock/ 或 /health",
-				})
+				}); err != nil {
+					log.Printf("错误: 编码响应失败: %v", err)
+				}
 			}
 		}
 
