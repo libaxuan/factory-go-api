@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GitHub Actions CI/CD 工作流
 - 完整的文档和贡献指南
 
-## [1.0.0] - 2025-01-08
+## [1.0.0] - 2025-10-08
 
 ### Added
 - 🎉 首次发布
