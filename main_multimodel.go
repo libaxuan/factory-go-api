@@ -1,4 +1,3 @@
-
 package main
 
 import (
@@ -266,8 +265,7 @@ func handleFactoryOpenAIRequest(w http.ResponseWriter, r *http.Request, openaiRe
 	resp, err := client.Do(proxyReq)
 	if err != nil {
 		log.Printf("错误: 请求失败: %v", err)
-		http.Error(w, `{"error": {"message": "Request to upstream failed", "type": 
-"upstream_error"}}`, http.StatusBadGateway)
+		http.Error(w, `{"error": {"message": "Request to upstream failed", "type": "upstream_error"}}`, http.StatusBadGateway)
 		return
 	}
 	defer resp.Body.Close()
@@ -501,8 +499,7 @@ func main() {
 		Addr:         port,
 		ReadTimeout:  120 * time.Second,
 		WriteTimeout: 300 * time.Second,
-		
-IdleTimeout:  120 * time.Second,
+		IdleTimeout:  120 * time.Second,
 	}
 
 	log.Printf("🚀 服务启动于 http://localhost%s", port)

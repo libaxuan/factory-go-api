@@ -4,11 +4,20 @@
 package main
 
 import (
+	"factory-go-api/config"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 )
+
+func init() {
+	// 在测试开始前加载配置
+	_, err := config.LoadConfig("config.json")
+	if err != nil {
+		panic("Failed to load config: " + err.Error())
+	}
+}
 
 func TestGetEnv(t *testing.T) {
 	tests := []struct {
@@ -78,8 +87,8 @@ func TestIsModelSupported(t *testing.T) {
 		want    bool
 	}{
 		{
-			name:    "支持的模型 - claude-3-7-sonnet",
-			modelID: "claude-3-7-sonnet-20250219",
+			name:    "支持的模型 - claude-opus-4-1",
+			modelID: "claude-opus-4-1-20250805",
 			want:    true,
 		},
 		{
@@ -101,8 +110,8 @@ func TestIsModelSupported(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := isModelSupported(tt.modelID); got != tt.want {
-				t.Errorf("isModelSupported() = %v, want %v", got, tt.want)
+			if got := config.IsModelSupported(tt.modelID); got != tt.want {
+				t.Errorf("config.IsModelSupported() = %v, want %v", got, tt.want)
 			}
 		})
 	}
