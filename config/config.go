@@ -32,7 +32,6 @@ type Config struct {
 
 var (
 	globalConfig *Config
-	once         sync.Once
 	configMutex  sync.RWMutex
 )
 
