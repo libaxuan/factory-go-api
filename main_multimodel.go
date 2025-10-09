@@ -46,11 +46,13 @@ func (r *responseRecorder) WriteHeader(code int) {
 // 健康检查端点
 func healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	if err := json.NewEncoder(w).Encode(map[string]interface{}{
 		"status":    "healthy",
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
 		"uptime":    time.Since(startTime).Seconds(),
-	})
+	}); err != nil {
+		log.Printf("错误: 编码响应失败: %v", err)
+	}
 }
 
 // 模型列表端点
@@ -69,10 +71,12 @@ func modelsHandler(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 	
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	if err := json.NewEncoder(w).Encode(map[string]interface{}{
 		"object": "list",
 		"data":   openaiModels,
-	})
+	}); err != nil {
+		log.Printf("错误: 编码响应失败: %v", err)
+	}
 }
 
 // API 文档端点
@@ -83,7 +87,9 @@ func docsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Write(htmlContent)
+	if _, err := w.Write(htmlContent); err != nil {
+		log.Printf("错误: 写入响应失败: %v", err)
+	}
 }
 
 // OpenAI 兼容的聊天端点
@@ -135,7 +141,11 @@ func chatCompletionsHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error": {"message": "Failed to read request body", "type": "invalid_request_error"}}`, http.StatusBadRequest)
 		return
 	}
-	defer r.Body.Close()
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("警告: 关闭请求体失败: %v", err)
+		}
+	}()
 
 	// 解析 OpenAI 请求
 	var openaiReq transformers.OpenAIRequest
@@ -210,7 +220,11 @@ func handleAnthropicRequest(w http.ResponseWriter, r *http.Request, openaiReq *t
 		http.Error(w, `{"error": {"message": "Request to upstream failed", "type": "upstream_error"}}`, http.StatusBadGateway)
 		return
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Printf("警告: 关闭响应体失败: %v", err)
+		}
+	}()
 
 	log.Printf("📥 Anthropic 响应: %d", resp.StatusCode)
 
@@ -268,7 +282,11 @@ func handleFactoryOpenAIRequest(w http.ResponseWriter, r *http.Request, openaiRe
 		http.Error(w, `{"error": {"message": "Request to upstream failed", "type": "upstream_error"}}`, http.StatusBadGateway)
 		return
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Printf("警告: 关闭响应体失败: %v", err)
+		}
+	}()
 
 	log.Printf("📥 Factory OpenAI 响应: %d", resp.StatusCode)
 
@@ -296,7 +314,9 @@ func handleAnthropicNonStreamResponse(w http.ResponseWriter, resp *http.Response
 		// 错误响应直接转发
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(resp.StatusCode)
-		w.Write(body)
+		if _, err := w.Write(body); err != nil {
+			log.Printf("错误: 写入错误响应失败: %v", err)
+		}
 		return
 	}
 
@@ -319,7 +339,9 @@ func handleAnthropicNonStreamResponse(w http.ResponseWriter, resp *http.Response
 
 	// 返回 OpenAI 格式响应
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(openaiResp)
+	if err := json.NewEncoder(w).Encode(openaiResp); err != nil {
+		log.Printf("错误: 编码响应失败: %v", err)
+	}
 }
 
 // 处理 Anthropic 流式响应
@@ -341,7 +363,10 @@ func handleAnthropicStreamResponse(w http.ResponseWriter, resp *http.Response, m
 	outputChan := transformer.TransformStream(resp.Body)
 	
 	for chunk := range outputChan {
-		fmt.Fprint(w, chunk)
+		if _, err := fmt.Fprint(w, chunk); err != nil {
+			log.Printf("错误: 写入流式响应失败: %v", err)
+			return
+		}
 		flusher.Flush()
 	}
 }
@@ -360,7 +385,9 @@ func handleFactoryOpenAINonStreamResponse(w http.ResponseWriter, resp *http.Resp
 		// 错误响应直接转发
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(resp.StatusCode)
-		w.Write(body)
+		if _, err := w.Write(body); err != nil {
+			log.Printf("错误: 写入错误响应失败: %v", err)
+		}
 		return
 	}
 
@@ -383,7 +410,9 @@ func handleFactoryOpenAINonStreamResponse(w http.ResponseWriter, resp *http.Resp
 
 	// 返回 OpenAI 格式响应
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(openaiResp)
+	if err := json.NewEncoder(w).Encode(openaiResp); err != nil {
+		log.Printf("错误: 编码响应失败: %v", err)
+	}
 }
 
 // 处理 Factory OpenAI 流式响应
@@ -405,7 +434,10 @@ func handleFactoryOpenAIStreamResponse(w http.ResponseWriter, resp *http.Respons
 	outputChan := transformer.TransformStream(resp.Body)
 	
 	for chunk := range outputChan {
-		fmt.Fprint(w, chunk)
+		if _, err := fmt.Fprint(w, chunk); err != nil {
+			log.Printf("错误: 写入流式响应失败: %v", err)
+			return
+		}
 		flusher.Flush()
 	}
 }
@@ -482,7 +514,7 @@ func main() {
 		}
 		
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		if err := json.NewEncoder(w).Encode(map[string]interface{}{
 			"service": "Factory Go API - Multi-Model Support",
 			"version": "2.0",
 			"endpoints": []string{
@@ -490,7 +522,9 @@ func main() {
 				"/v1/models",
 				"/v1/chat/completions",
 			},
-		})
+		}); err != nil {
+			log.Printf("错误: 编码响应失败: %v", err)
+		}
 	})
 
 	// 启动服务器
