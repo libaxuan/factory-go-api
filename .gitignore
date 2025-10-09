@@ -53,3 +53,7 @@ legacy/
 
 # PID files
 *.pid
+
+# Project binaries
+factory-api
+factory-go-api
