@@ -48,5 +48,8 @@ temp/
 dist/
 build/
 
+# Legacy/backup files
+legacy/
+
 # PID files
 *.pid
