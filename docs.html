@@ -1,0 +1,325 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factory Go API - 多模型支持文档</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        .header h1 { font-size: 2.5em; margin-bottom: 10px; }
+        .badge {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .content { padding: 40px; }
+        .section { margin-bottom: 40px; }
+        .section h2 {
+            color: #667eea;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+        .highlight-box {
+            background: #ecfdf5;
+            border-left: 4px solid #10b981;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #e2e8f0;
+        }
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        .check {
+            color: #10b981;
+            font-weight: bold;
+        }
+        .endpoint {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .method {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .method.post { background: #10b981; color: white; }
+        .method.get { background: #3b82f6; color: white; }
+        code {
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: Monaco, monospace;
+            color: #e74c3c;
+        }
+        pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: Monaco, monospace;
+        }
+        .footer {
+            background: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Factory Go API</h1>
+            <p>多模型支持 | OpenAI 兼容格式 | 流式/非流式全支持</p>
+            <span class="badge">✅ 5 个模型 × 2 种模式 = 10 种配置全部支持</span>
+        </div>
+        <div class="content">
+            <div class="section">
+                <h2>📖 快速开始</h2>
+                <p>Factory Go API 提供 OpenAI 兼容的接口，支持 Claude、GPT 等多个 AI 模型家族。</p>
+                <div class="highlight-box">
+                    <strong>✨ 核心特性：</strong> 所有 5 个模型均支持流式和非流式响应，测试通过率 100%
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>🤖 支持的模型</h2>
+                
+                <h3>Claude 系列 (Anthropic)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>模型 ID</th>
+                            <th>描述</th>
+                            <th style="text-align: center;">流式</th>
+                            <th style="text-align: center;">非流式</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>claude-opus-4-1-20250805</code></td>
+                            <td>🧠 最强推理能力</td>
+                            <td style="text-align: center;" class="check">✅</td>
+                            <td style="text-align: center;" class="check">✅</td>
+                        </tr>
+                        <tr>
+                            <td><code>claude-sonnet-4-20250514</code></td>
+                            <td>⚡ Extended Thinking 中等</td>
+                            <td style="text-align: center;" class="check">✅</td>
+                            <td style="text-align: center;" class="check">✅</td>
+                        </tr>
+                        <tr>
+                            <td><code>claude-sonnet-4-5-20250929</code></td>
+                            <td>⭐ Extended Thinking 高级（推荐）</td>
+                            <td style="text-align: center;" class="check">✅</td>
+                            <td style="text-align: center;" class="check">✅</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3 style="margin-top: 30px;">GPT 系列 (OpenAI)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>模型 ID</th>
+                            <th>描述</th>
+                            <th style="text-align: center;">流式</th>
+                            <th style="text-align: center;">非流式</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>gpt-5-2025-08-07</code></td>
+                            <td>🚀 最新旗舰模型</td>
+                            <td style="text-align: center;" class="check">✅</td>
+                            <td style="text-align: center;" class="check">✅</td>
+                        </tr>
+                        <tr>
+                            <td><code>gpt-5-codex</code></td>
+                            <td>💻 代码生成专家</td>
+                            <td style="text-align: center;" class="check">✅</td>
+                            <td style="text-align: center;" class="check">✅</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="section">
+                <h2>🔌 API 端点</h2>
+                
+                <div class="endpoint">
+                    <div><span class="method get">GET</span><code>/v1/models</code></div>
+                    <p>获取所有可用模型列表</p>
+                    <pre>curl http://localhost:8003/v1/models \
+  -H "Authorization: Bearer YOUR_PROXY_API_KEY"</pre>
+                </div>
+
+                <div class="endpoint">
+                    <div><span class="method post">POST</span><code>/v1/chat/completions</code></div>
+                    <p>创建对话补全（支持流式和非流式）</p>
+                    
+                    <h4 style="margin-top: 15px; color: #667eea;">💬 非流式请求示例</h4>
+                    <pre>curl -X POST http://localhost:8003/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_PROXY_API_KEY" \
+  -d '{
+    "model": "gpt-5-2025-08-07",
+    "messages": [{"role": "user", "content": "Hello!"}],
+    "max_tokens": 100,
+    "stream": false
+  }'</pre>
+                    
+                    <h4 style="margin-top: 15px; color: #667eea;">🌊 流式请求示例</h4>
+                    <pre>curl -N -X POST http://localhost:8003/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_PROXY_API_KEY" \
+  -d '{
+    "model": "claude-sonnet-4-5-20250929",
+    "messages": [{"role": "user", "content": "Tell me a story"}],
+    "max_tokens": 1000,
+    "stream": true
+  }'</pre>
+                </div>
+
+                <div class="endpoint">
+                    <div><span class="method get">GET</span><code>/health</code></div>
+                    <p>健康检查</p>
+                    <pre>curl http://localhost:8003/health</pre>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>🔑 认证说明</h2>
+                <p><strong>重要：</strong>本服务使用双 Key 机制</p>
+                <table style="margin-top: 15px;">
+                    <thead>
+                        <tr>
+                            <th>Key 类型</th>
+                            <th>用途</th>
+                            <th>配置位置</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>FACTORY_API_KEY</code></td>
+                            <td>🔐 <strong>源头 Key</strong> - 服务器调用上游 AI 服务（Anthropic/OpenAI）时使用</td>
+                            <td>.env 文件（服务端）</td>
+                        </tr>
+                        <tr>
+                            <td><code>PROXY_API_KEY</code></td>
+                            <td>🌐 <strong>对外代理 Key</strong> - 客户端调用本代理服务时使用</td>
+                            <td>.env 文件（服务端设置，客户端使用）</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="highlight-box" style="margin-top: 20px;">
+                    <strong>客户端请求示例：</strong>
+                    <pre style="margin-top: 10px;">Authorization: Bearer YOUR_PROXY_API_KEY</pre>
+                    <small>⚠️ 注意：客户端使用 <code>PROXY_API_KEY</code>，而非 <code>FACTORY_API_KEY</code></small>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>📝 Python 示例</h2>
+                <h4 style="color: #667eea; margin-bottom: 10px;">非流式</h4>
+                <pre>from openai import OpenAI
+
+client = OpenAI(
+    base_url="http://localhost:8003/v1",
+    api_key="YOUR_PROXY_API_KEY"  # 使用对外代理 Key
+)
+
+response = client.chat.completions.create(
+    model="gpt-5-2025-08-07",
+    messages=[{"role": "user", "content": "Hello!"}],
+    stream=False
+)
+
+print(response.choices[0].message.content)</pre>
+
+                <h4 style="color: #667eea; margin: 20px 0 10px 0;">流式</h4>
+                <pre>stream = client.chat.completions.create(
+    model="claude-sonnet-4-5-20250929",
+    messages=[{"role": "user", "content": "Tell me a story"}],
+    stream=True
+)
+
+for chunk in stream:
+    if chunk.choices[0].delta.content:
+        print(chunk.choices[0].delta.content, 
+end="", flush=True)</pre>
+            </div>
+
+            <div class="section">
+                <h2>🧪 测试</h2>
+                <p>运行完整测试套件验证所有模型：</p>
+                <pre># macOS/Linux
+./restart_and_test.sh
+
+# Windows
+test_models.bat</pre>
+                <div class="highlight-box">
+                    <strong>测试结果：</strong> 10/10 成功，成功率 100%
+                    <br>
+                    <small>✅ 3 个 Claude 模型 × 2 模式 = 6 项测试</small>
+                    <br>
+                    <small>✅ 2 个 GPT 模型 × 2 模式 = 4 项测试</small>
+                </div>
+            </div>
+        </div>
+        <div class="footer">
+            <p><strong>Factory Go API v2.0</strong> | <a href="https://github.com/libaxuan/factory-go-api" target="_blank" style="color: #667eea;">GitHub</a> | Made with ❤️</p>
+        </div>
+    </div>
+</body>
+</html>

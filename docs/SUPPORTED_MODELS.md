@@ -70,7 +70,7 @@ curl -X POST http://localhost:8003/v1/chat/completions \
 
 ### 其他模型（不支持）
 
-- `glm-4.6` - HTTP 400
+- `glm-4.6` - HTTP 403 Forbidden（Factory AI 不支持）
 
 ## 📊 测试统计
 

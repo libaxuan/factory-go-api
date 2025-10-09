@@ -1,0 +1,47 @@
+{
+  "port": 8003,
+  "endpoints": [
+    {
+      "name": "openai",
+      "base_url": "https://app.factory.ai/api/llm/o/v1/responses"
+    },
+    {
+      "name": "anthropic",
+      "base_url": "https://app.factory.ai/api/llm/a/v1/messages"
+    }
+  ],
+  "models": [
+    {
+      "name": "Claude Opus 4.1",
+      "id": "claude-opus-4-1-20250805",
+      "type": "anthropic",
+      "reasoning": "off"
+    },
+    {
+      "name": "Claude Sonnet 4",
+      "id": "claude-sonnet-4-20250514",
+      "type": "anthropic",
+      "reasoning": "medium"
+    },
+    {
+      "name": "Claude Sonnet 4.5",
+      "id": "claude-sonnet-4-5-20250929",
+      "type": "anthropic",
+      "reasoning": "high"
+    },
+    {
+      "name": "GPT-5",
+      "id": "gpt-5-2025-08-07",
+      "type": "openai",
+      "reasoning": "high"
+    },
+    {
+      "name": "GPT-5 Codex",
+      "id": "gpt-5-codex",
+      "type": "openai",
+      "reasoning": "off"
+    }
+  ],
+  "system_prompt": "You are Droid, an AI software engineering agent built by Factory.",
+  "user_agent": "factory-cli/0.19.3"
+}

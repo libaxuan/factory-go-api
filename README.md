@@ -1,15 +1,11 @@
-
-# Factory Proxy
+# Factory Go API
 
 <div align="center">
 
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-**高性能 Factory AI API 代理服务器 | 支持 OpenAI 兼容格式**
-
-[English](README.md) | [简体中文](README.md)
+**高性能 Factory AI API 网关 | 多模型支持 | OpenAI 兼容格式**
 
 </div>
 
@@ -17,482 +13,331 @@
 
 ## 📖 简介
 
-Factory Proxy 是一个用 Go 语言编写的高性能代理服务器，专为 Factory AI API 设计。它提供两种工作模式：
+Factory Go API 是一个高性能的 AI 模型网关，提供 OpenAI 兼容的统一接口。支持 Claude、GPT 等多个 AI 模型家族。
 
-1. **Anthropic 原生模式** - 直接代理 Factory AI 的原生 API
-2. **OpenAI 兼容模式** ⭐ - 将 Factory AI 转换为标准 OpenAI API 格式
+### 核心特性
 
-使用 OpenAI 兼容模式，你可以：
-- 🔄 无缝迁移现有 OpenAI 项目
-- 📦 使用标准 OpenAI SDK（Python、Node.js 等）
-- 🚀 零代码改动，只需修改 `base_url`
-
-## ✨ 特性
-
-### 核心功能
 - ⚡ **极致性能** - Go 原生实现，启动 < 10ms，内存占用 ~11MB
-- 🔄 **格式转换** - 自动转换 OpenAI ↔ Anthropic 格式
-- 🌊 **流式响应** - 支持 SSE 流式和非流式响应 🆕
-- 🔐 **API Key 代理** - 双 Key 机制保护源头 API Key
-- 🔐 **认证处理** - 支持 Bearer Token 和 API Key 认证
-- 🎯 **智能路由** - 自动注入 Factory Droid system prompt
-- 📊 **详细日志** - 完整的请求/响应日志记录
-- 🏥 **健康检查** - 内置健康检查端点
+- 🎯 **多模型支持** - 统一接口访问 Claude、GPT 等 5 个模型
+- 🔄 **OpenAI 兼容** - 使用标准 OpenAI SDK 即可调用所有模型
+- 🌊 **双模式响应** - 完整支持流式（SSE）和非流式响应
+- 🔐 **安全认证** - Bearer Token 认证保护
+- 📊 **详细日志** - 完整的请求/响应日志
 
-### 支持的 API
-- ✅ Anthropic Claude API（原生格式）
-- ✅ OpenAI Chat Completions API（兼容格式）
-- ✅ AWS Bedrock API（原生格式）
+## 🎯 支持的模型
+
+**5 个 AI 模型**，覆盖两大家族，**每个模型都支持流式和非流式** = **10 种配置全部可用**：
+
+### Claude 系列 (Anthropic)
+| 模型 ID | 描述 | 流式 | 非流式 |
+|---------|------|------|--------|
+| `claude-opus-4-1-20250805` | 🧠 Claude Opus 4.1 - 最强推理 | ✅ | ✅ |
+| `claude-sonnet-4-20250514` | ⚡ Claude Sonnet 4 - Extended Thinking 中等 | ✅ | ✅ |
+| `claude-sonnet-4-5-20250929` | ⭐ Claude Sonnet 4.5 - Extended Thinking 高级（推荐） | ✅ | ✅ |
+
+### GPT 系列 (OpenAI)
+| 模型 ID | 描述 | 流式 | 非流式 |
+|---------|------|------|--------|
+| `gpt-5-2025-08-07` | 🚀 GPT-5 - 最新旗舰，Extended Thinking | ✅ | ✅ |
+| `gpt-5-codex` | 💻 GPT-5 Codex - 代码生成专家 | ✅ | ✅ |
 
 ## 🚀 快速开始
 
 ### 安装
 
-**前置要求**: Go 1.21 或更高版本
-
 ```bash
 # 克隆仓库
-git clone https://github.com/libaxuan/factory-proxy.git
-cd factory-proxy/factory-go-api
+git clone https://github.com/libaxuan/factory-go-api.git
+cd factory-go-api
 
 # 配置环境变量
 cp .env.example .env
-# 编辑 .env 文件:
-# - FACTORY_API_KEY: 从 https://app.factory.ai/settings/api-keys 获取
-# - PROXY_API_KEY: 自定义的安全字符串
-
-# 编译
-go build -o factory-proxy main.go              # Anthropic 原生模式
-go build -o factory-proxy-openai main-openai.go  # OpenAI 兼容模式
+# 编辑 .env，设置 FACTORY_API_KEY
 ```
 
-### 使用 OpenAI 兼容模式 ⭐ 推荐
+### 启动
 
-#### 1. 启动服务器
+**macOS/Linux:**
+```bash
+./start.sh
+# 服务运行在 http://localhost:8003
+```
+
+**Windows:**
+```cmd
+start.bat
+# 服务运行在 http://localhost:8003
+```
+
+### 测试
 
 ```bash
-PORT=8003 ./factory-proxy-openai
+# 快速健康检查
+curl http://localhost:8003/health
+
+# 查看支持的模型
+curl http://localhost:8003/v1/models \
+  -H "Authorization: Bearer YOUR_API_KEY"
+
+# 运行完整测试（测试所有 10 种配置）
+./restart_and_test.sh  # 重启服务并测试
+# 或直接测试
+./test_models.sh  # macOS/Linux
+test_models.bat   # Windows
+
+# 测试单个模型（非流式）
+curl -X POST http://localhost:8003/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -d '{
+    "model": "gpt-5-2025-08-07",
+    "messages": [{"role": "user", "content": "Hello!"}],
+    "stream": false
+  }'
+
+# 测试流式响应
+curl -X POST http://localhost:8003/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -d '{
+    "model": "claude-sonnet-4-5-20250929",
+    "messages": [{"role": "user", "content": "Tell me a story"}],
+    "stream": true
+  }'
 ```
 
-输出：
-```
-🚀 Factory OpenAI-Compatible Proxy 启动中...
-✅ 服务器已启动，监听于 http://localhost:8003
-📋 OpenAI兼容接口:
-   - POST /v1/chat/completions
-   - GET /v1/health
-```
+## 💻 代码示例
 
-#### 2. 使用 Python OpenAI SDK
+### Python
 
-**非流式响应**:
 ```python
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="YOUR_PROXY_API_KEY",  # 使用代理 Key，不是 Factory Key
-    base_url="http://localhost:8003/v1"
+    base_url="http://localhost:8003/v1",
+    api_key="YOUR_FACTORY_API_KEY"
 )
 
+# 非流式
 response = client.chat.completions.create(
     model="claude-sonnet-4-5-20250929",
-    messages=[
-        {"role": "system", "content": "You are a helpful assistant."},
-        {"role": "user", "content": "Hello!"}
-    ],
-    max_tokens=100,
-    stream=False  # 非流式
+    messages=[{"role": "user", "content": "Hello!"}]
 )
-
 print(response.choices[0].message.content)
-```
 
-**流式响应** 🆕:
-```python
+# 流式
 stream = client.chat.completions.create(
-    model="claude-sonnet-4-5-20250929",
-    messages=[
-        {"role": "user", "content": "写一个 Python Hello World 程序"}
-    ],
-    max_tokens=500,
-    stream=True  # 启用流式
+    model="gpt-5-2025-08-07",
+    messages=[{"role": "user", "content": "Tell me a story"}],
+    stream=True
 )
-
 for chunk in stream:
     if chunk.choices[0].delta.content:
-        print(chunk.choices[0].delta.content, end="", flush=True)
+        print(chunk.choices[0].delta.content, end="")
 ```
 
-#### 3. 使用 curl
+### JavaScript/TypeScript
 
-**非流式**:
-```bash
-curl -X POST http://localhost:8003/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_PROXY_API_KEY" \
-  -d '{
-    "model": "claude-sonnet-4-5-20250929",
-    "messages": [{"role": "user", "content": "Hello!"}],
-    "max_tokens": 100,
-    "stream": false
-  }'
-```
+```javascript
+import OpenAI from 'openai';
 
-**流式** 🆕:
-```bash
-curl -X POST http://localhost:8003/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_PROXY_API_KEY" \
-  -d '{
-    "model": "claude-sonnet-4-5-20250929",
-    "messages": [{"role": "user", "content": "Hello!"}],
-    "max_tokens": 100,
-    "stream": true
-  }' \
-  --no-buffer
-```
+const client = new OpenAI({
+  baseURL: 'http://localhost:8003/v1',
+  apiKey: 'YOUR_FACTORY_API_KEY'
+});
 
-响应（标准 OpenAI 格式）：
-```json
-{
-  "id": "msg_xxx",
-  "object": "chat.completion",
-  "created": 1234567890,
-  "model": "claude-sonnet-4-5-20250929",
-  "choices": [{
-    "index": 0,
-    "message": {
-      "role": "assistant",
-      "content": "Hello! How can I help you today?"
-    },
-    "finish_reason": "stop"
-  }],
-  "usage": {
-    "prompt_tokens": 10,
-    "completion_tokens": 8,
-    "total_tokens": 18
-  }
+// 非流式
+const response = await client.chat.completions.create({
+  model: 'claude-sonnet-4-5-20250929',
+  messages: [{ role: 'user', content: 'Hello!' }]
+});
+console.log(response.choices[0].message.content);
+
+// 流式
+const stream = await client.chat.completions.create({
+  model: 'gpt-5-2025-08-07',
+  messages: [{ role: 'user', content: 'Tell me a story' }],
+  stream: true
+});
+for await (const chunk of stream) {
+  process.stdout.write(chunk.choices[0]?.delta?.content || '');
 }
 ```
 
-### 使用 Anthropic 原生模式
+### Go
 
-```bash
-# 启动服务器
-PORT=8001 ./factory-proxy
+```go
+package main
 
-# 调用 API
-curl -X POST http://localhost:8001/anthropic/v1/messages \
-  -H "Content-Type: application/json" \
-  -H "x-api-key: YOUR_PROXY_API_KEY" \
-  -d '{
-    "model": "claude-sonnet-4-5-20250929",
-    "messages": [{"role": "user", "content": "Hello"}],
-    "max_tokens": 100
-  }'
+import (
+    "context"
+    "fmt"
+    "github.com/sashabaranov/go-openai"
+)
+
+func main() {
+    config := openai.DefaultConfig("YOUR_FACTORY_API_KEY")
+    config.BaseURL = "http://localhost:8003/v1"
+    client := openai.NewClientWithConfig(config)
+
+    resp, err := client.CreateChatCompletion(
+        context.Background(),
+        openai.ChatCompletionRequest{
+            Model: "claude-sonnet-4-5-20250929",
+            Messages: []openai.ChatCompletionMessage{
+                {
+                    Role:    openai.ChatMessageRoleUser,
+                    Content: "Hello!",
+                },
+            },
+        },
+    )
+    if err != nil {
+        panic(err)
+    }
+    fmt.Println(resp.Choices[0].Message.Content)
+}
 ```
-
-## 📚 文档
-
-### 核心文档
-- [🚀 快速开始](docs/QUICK_START.md) - 5分钟快速上手
-- [🌊 流式响应](docs/STREAMING.md) - SSE 流式和非流式完整指南 🆕
-- [🔐 API Key 代理](docs/API-KEY-PROXY.md) - 双 Key 机制保护源头 API Key
-- [📦 OpenAI 兼容模式](docs/README-OpenAI.md) - 详细的 OpenAI 兼容接口说明
-
-### 参考文档
-- [🚢 部署指南](docs/DEPLOYMENT.md) - 生产环境部署
-- [🏗️ 项目结构](docs/PROJECT_STRUCTURE.md) - 代码架构详解
-
-### 其他
-- [🤝 贡献指南](CONTRIBUTING.md) - 如何参与项目开发
-- [📝 更新日志](CHANGELOG.md) - 版本更新记录
-- [📄 许可证](LICENSE) - MIT License
-
-## 🎯 支持的模型
-
-**仅支持 Claude 系列模型**，目前提供以下 2 个型号：
-
-### Claude 系列
-- `claude-sonnet-4-5-20250929` ⭐ - Claude 4.5 Sonnet (推荐)
-- `claude-opus-4-1-20250805` 🧠 - Claude Opus 4 (最强推理)
-
-> 💡 **说明**: 本服务专注于提供 Claude 系列模型，确保最佳性能和稳定性。
 
 ## ⚙️ 配置
 
 ### 环境变量
 
-```bash
-# 必需配置
-export FACTORY_API_KEY="your_real_factory_api_key"  # 源头 Factory API Key (从 https://app.factory.ai/settings/api-keys 获取)
-export PROXY_API_KEY="your_custom_proxy_key"        # 对外代理 Key (自定义)
-
-# 可选配置
-export PORT=8003  # 服务器端口（默认：8000）
-export ANTHROPIC_TARGET_URL="https://your-endpoint.com"  # 已预配置
-```
-
-
-
-
-### 使用 .env 文件
-
-复制 `.env.example` 并修改：
+在 `.env` 文件中配置：
 
 ```bash
-cp .env.example .env
-# 编辑 .env 文件
+# 必需
+FACTORY_API_KEY=your_factory_api_key
+
+# 可选
+PORT=8003
+CONFIG_PATH=config.json
 ```
 
-## 📊 性能对比
+### 模型配置
 
-| 指标 | Go 版本 | Deno 版本 |
-|------|---------|-----------|
-| **启动时间** | ⚡ < 10ms | 🐢 ~500ms |
-| **内存占用** | 📉 ~11MB | 📈 ~50MB |
-| **二进制大小** | 📦 ~8MB | ❌ 需要运行时 |
-| **并发性能** | ⚡ 优秀 | ✅ 良好 |
-| **部署复杂度** | ✅ 单文件 | ⚠️ 需要 Deno 环境 |
+编辑 `config.json` 添加或修改模型：
+
+```json
+{
+  "port": 8003,
+  "endpoints": [
+    {
+      "name": "anthropic",
+      "base_url": "https://app.factory.ai/api/llm/a/v1/messages"
+    },
+    {
+      "name": "openai",
+      "base_url": "https://app.factory.ai/api/llm/o/v1/responses"
+    }
+  ],
+  "models": [
+    {
+      "name": "Claude Sonnet 4.5",
+      "id": "claude-sonnet-4-5-20250929",
+      "type": "anthropic",
+      "reasoning": "high"
+    },
+    {
+      "name": "GPT-5",
+      "id": "gpt-5-2025-08-07",
+      "type": "openai",
+      "reasoning": "high"
+    }
+  ]
+}
+```
+
+## 🔌 API 端点
+
+| 端点 | 方法 | 描述 |
+|------|------|------|
+| `/health` | GET | 健康检查 |
+| `/v1/models` | GET | 模型列表 |
+| `/v1/chat/completions` | POST | 聊天补全（OpenAI 兼容） |
+| `/docs` | GET | API 文档页面 |
+
+## 📊 性能
+
+| 指标 | 数值 |
+|------|------|
+| 启动时间 | < 10ms |
+| 内存占用 | ~11MB |
+| 二进制大小 | ~8MB |
+| 并发性能 | 优秀 |
 
 ## 🔧 开发
 
-### 项目结构
-
-```
-factory-go/
-├── main.go              # Anthropic 原生模式
-├── main-openai.go       # OpenAI 兼容模式 ⭐
-├── go.mod & go.sum      # Go 依赖
-├── README.md            # 主文档
-├── README-OpenAI.md     # OpenAI 模式详细文档
-├── CONTRIBUTING.md      # 贡献指南
-├── LICENSE              # MIT 许可证
-├── .gitignore           # Git 忽略文件
-├── .env.example         # 环境变量示例
-├── start.sh             # 启动脚本
-└── test_openai_sdk.py   # Python 测试脚本
-```
-
-### 本地开发
-
 ```bash
-# 克隆项目
-git clone https://github.com/libaxuan/factory-proxy.git
-cd factory-proxy/factory-go
-
 # 安装依赖
 go mod tidy
 
-# 运行（开发模式）
-go run main-openai.go
+# 开发模式运行
+go run main_multimodel.go
 
 # 构建
-go build -o factory-proxy-openai main-openai.go
+go build -o factory-api main_multimodel.go
 
-# 测试
-go test -v ./...
-```
-
-### 代码格式化
-
-```bash
 # 格式化代码
 gofmt -w .
 
-# 检查代码
+# 代码检查
 go vet ./...
+
+# 运行完整模型测试
+chmod +x restart_and_test.sh
+./restart_and_test.sh  # 重启服务并测试所有 7 个模型配置
 ```
 
 ## 🚢 部署
 
-### 本地部署
-
-```bash
-# 使用启动脚本
-./start.sh
-
-# 或手动启动
-PORT=8003 ./factory-proxy-openai
-```
-
-### Docker 部署
+### Docker
 
 ```bash
 # 构建镜像
-docker build -t factory-proxy .
+docker build -t factory-api .
 
 # 运行容器
 docker run -d \
   -p 8003:8003 \
-  -e PORT=8003 \
-  --name factory-proxy \
-  factory-proxy
+  -e FACTORY_API_KEY=your_key \
+  --name factory-api \
+  factory-api
 ```
 
-### 生产部署（systemd）
+### systemd
 
-创建服务文件 `/etc/systemd/system/factory-proxy.service`：
+创建 `/etc/systemd/system/factory-api.service`:
 
 ```ini
 [Unit]
-Description=Factory Proxy Service
+Description=Factory API Service
 After=network.target
 
 [Service]
 Type=simple
 User=www-data
-WorkingDirectory=/opt/factory-proxy
-Environment="PORT=8003"
-ExecStart=/opt/factory-proxy/factory-proxy-openai
+WorkingDirectory=/opt/factory-api
+
+Environment="FACTORY_API_KEY=your_key"
+ExecStart=/opt/factory-api/factory-api
 Restart=always
-RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
 ```
 
-启动服务：
-
 ```bash
-sudo systemctl enable factory-proxy
-sudo systemctl start factory-proxy
-sudo systemctl status factory-proxy
-```
-
-## 🔍 API 端点
-
-### OpenAI 兼容模式
-
-| 端点 | 方法 | 描述 |
-|------|------|------|
-| `/v1/chat/completions` | POST | OpenAI 兼容的对话接口 |
-| `/v1/health` | GET | 健康检查 |
-| `/health` | GET | 健康检查（别名） |
-
-### Anthropic 原生模式
-
-| 端点 | 方法 | 描述 |
-|------|------|------|
-| `/anthropic/*` | POST | Anthropic API 代理 |
-| `/openai/*` | POST | OpenAI API 代理 |
-| `/bedrock/*` | POST | Bedrock API 代理 |
-| `/health` | GET | 健康检查 |
-
-## 📝 示例代码
-
-### Node.js
-
-**非流式**:
-```javascript
-import OpenAI from 'openai';
-
-const client = new OpenAI({
-  apiKey: process.env.PROXY_API_KEY,  // 使用代理 Key
-  baseURL: 'http://localhost:8003/v1'
-});
-
-const response = await client.chat.completions.create({
-  model: 'claude-sonnet-4-5-20250929',
-  messages: [
-    { role: 'system', content: 'You are a helpful assistant.' },
-    { role: 'user', content: 'Hello!' }
-  ],
-  max_tokens: 100,
-  stream: false
-});
-
-console.log(response.choices[0].message.content);
-```
-
-**流式** 🆕:
-```javascript
-const stream = await client.chat.completions.create({
-  model: 'claude-sonnet-4-5-20250929',
-  messages: [
-    { role: 'user', content: 'Write a Hello World in JavaScript' }
-  ],
-  max_tokens: 500,
-  stream: true
-});
-
-for await (const chunk of stream) {
-  if (chunk.choices[0]?.delta?.content) {
-    process.stdout.write(chunk.choices[0].delta.content);
-  }
-}
-```
-
-### Python
-
-**非流式**:
-```python
-from openai import OpenAI
-import os
-
-client = OpenAI(
-    api_key=os.getenv("PROXY_API_KEY"),  # 使用代理 Key
-    base_url="http://localhost:8003/v1"
-)
-
-response = client.chat.completions.create(
-    model="claude-sonnet-4-5-20250929",
-    messages=[
-        {"role": "system", "content": "You are a helpful assistant."},
-        {"role": "user", "content": "Hello!"}
-    ],
-    max_tokens=100,
-    stream=False
-)
-
-print(response.choices[0].message.content)
-```
-
-**流式** 🆕:
-```python
-stream = client.chat.completions.create(
-    model="claude-sonnet-4-5-20250929",
-    messages=[
-        {"role": "user", "content": "Write a Hello World in Python"}
-    ],
-    max_tokens=500,
-    stream=True
-)
-
-for chunk in stream:
-    if chunk.choices[0].delta.content:
-        print(chunk.choices[0].delta.content, end="", flush=True)
+sudo systemctl enable factory-api
+sudo systemctl start factory-api
 ```
 
 ## 🔐 安全建议
 
-1. **使用 API Key 代理** 🆕
-   ```bash
-   # 配置双 Key 机制
-   export FACTORY_API_KEY="your_factory_key"  # 服务器端使用 (从 https://app.factory.ai/settings/api-keys 获取)
-   export PROXY_API_KEY="your_proxy_key"      # 客户端使用 (自定义)
-   
-   # 客户端永远不会接触到源头的 Factory API Key
-   ```
-
-2. **保护 API Key**
-   ```bash
-   # 使用环境变量或 .env 文件
-   # 不要在代码中硬编码 API Key
-   # 不要提交 .env 文件到 Git（已在 .gitignore 中）
-   ```
-
-3. **使用 HTTPS**
-   - 生产环境请使用反向代理（Nginx/Caddy）配置 HTTPS
-
-4. **限流保护**
-   - 建议在反向代理层面配置限流规则
-
-5. **日志管理**
-   - 日志中不包含敏感信息（API Key 已脱敏，只显示前 8 位）
-
-6. **定期轮换 Key**
-   - 可以独立轮换 PROXY_API_KEY 而不影响上游连接
+1. **保护 API Key** - 使用环境变量，不要硬编码
+2. **使用 HTTPS** - 生产环境配置反向代理（Nginx/Caddy）
+3. **限流保护** - 在代理层面配置限流规则
+4. **日志管理** - API Key 已脱敏显示
 
 ## 🆘 故障排除
 
@@ -502,39 +347,46 @@ for chunk in stream:
 # 查看端口占用
 lsof -i :8003
 
-# 或使用其他端口
-PORT=9000 ./factory-proxy-openai
+# 使用其他端口
+PORT=9000 ./start.sh
 ```
 
-### 403 Forbidden 错误
+### 403 Forbidden
 
 确保：
-1. ✅ 使用正确的 Factory API Key
-2. ✅ 请求包含正确的认证头
-3. ✅ 服务器已正确配置环境变量
+- 使用正确的 Factory API Key
+- 请求包含 Authorization 头
+- 环境变量正确配置
 
 ### 连接超时
 
 ```bash
-# 检查目标服务是否可访问
-curl -I https://your-target-endpoint.com
+# 检查目标服务
+curl -I https://app.factory.ai
 
-# 检查防火墙规则
-# 检查网络连接
+# 检查防火墙和网络
 ```
+
+## 📝 更新日志
+
+查看 [CHANGELOG.md](CHANGELOG.md) 了解版本历史和更新内容。
 
 ## 🤝 贡献
 
-我们欢迎各种形式的贡献！请查看 [贡献指南](CONTRIBUTING.md)。
+欢迎贡献！请遵循以下步骤：
 
-### 贡献者
+1. Fork 项目
+2. 创建特性分支 (`git checkout -b feature/amazing`)
+3. 提交更改 (`git commit -m 'feat: add amazing feature'`)
+4. 推送到分支 (`git push origin feature/amazing`)
+5. 创建 Pull Request
 
-感谢所有贡献者！
-
-<a href="https://github.com/libaxuan/factory-proxy/graphs/contributors">
-  
-  <img src="https://contrib.rocks/image?repo=libaxuan/factory-proxy" />
-</a>
+提交信息规范：
+- `feat:` 新功能
+- `fix:` Bug 修复
+- `docs:` 文档更新
+- `refactor:` 代码重构
+- `test:` 测试相关
 
 ## 📄 许可证
 
@@ -544,25 +396,14 @@ curl -I https://your-target-endpoint.com
 
 - [Factory AI 官网](https://factory.ai)
 - [OpenAI API 文档](https://platform.openai.com/docs)
-- [Anthropic API 文档](https://docs.anthropic.com)
-
-## ⭐ Star History
-
-如果这个项目对你有帮助，请给我们一个 Star！
-
-[![Star History Chart](https://api.star-history.com/svg?repos=libaxuan/factory-proxy&type=Date)](https://star-history.com/#libaxuan/factory-proxy&Date)
-
-## 📮 联系方式
-
-- Issues: [GitHub Issues](https://github.com/libaxuan/factory-proxy/issues)
-- Discussions: [GitHub Discussions](https://github.com/libaxuan/factory-proxy/discussions)
+- [问题反馈](https://github.com/libaxuan/factory-go-api/issues)
 
 ---
 
 <div align="center">
 
-**Made with ❤️ by the Factory Proxy Team**
+**Made with ❤️ by Factory Go API Team**
 
-[⬆ 回到顶部](#factory-proxy)
+如果这个项目对你有帮助，请给个 ⭐ Star！
 
 </div>

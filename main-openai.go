@@ -886,7 +886,7 @@ func main() {
 	log.Printf("📍 端口: %s", config.Port)
 	log.Printf("🌐 Factory AI 基础 URL: %s", config.BaseURL)
 	log.Printf("🔐 API Key 代理: 已启用")
-	log.Printf("   - 对外 Key: %s***", config.ProxyAPIKey[:min(8, len(config.ProxyAPIKey))])
+	log.Printf("   - 对外 Key: %s", config.ProxyAPIKey)
 	log.Printf("   - 源头 Key: %s***", config.FactoryAPIKey[:min(8, len(config.FactoryAPIKey))])
 	log.Printf("🤖 支持的模型 (仅 Claude 系列):")
 	log.Printf("   - claude-sonnet-4-5-20250929 ⭐ (推荐)")
