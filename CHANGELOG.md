@@ -5,6 +5,28 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/) 规范，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.0.1] - 2025-10-10
+
+### 🔄 变更
+
+- **Claude Opus 4.1 Extended Thinking 对齐** - 将 [`claude-opus-4-1-20250805`](config.json:16) 的 `reasoning` 配置从 `"off"` 改为 `"high"`，与 Claude Sonnet 4.5 对齐
+  - 启用 Extended Thinking 能力（budget_tokens: 24576）
+  - 自动调整 max_tokens 逻辑：当 max_tokens ≤ 24576 时，自动增加到 28576
+  - 确保 Claude Opus 4.1 也具备深度推理能力
+
+### 🐛 修复
+
+- **修复 Docker 构建失败** - 解决 `docker compose up -d` 时找不到 `main-openai.go` 文件的问题
+  - 修正 [`Dockerfile`](Dockerfile:19) 复制文件路径，使用实际存在的 [`main_multimodel.go`](main_multimodel.go:1)
+  - 添加必要的配置文件和目录复制：`config/`, `transformers/`, `config.json`, `docs.html`
+  - 统一两个运行阶段的二进制文件为 `factory-proxy`
+  - 更新 [`docker-compose.yml`](docker-compose.yml:1) 环境变量配置，使用 `FACTORY_API_KEY` 和 `PROXY_API_KEY`
+
+### 📚 文档
+
+- **测试脚本对齐** - 更新 [`test_models.sh`](test_models.sh:128) 和 [`test_models.bat`](test_models.bat:67)
+  - 将 Claude Opus 4.1 测试的 max_tokens 从 100 改为 30000，与其他 Extended Thinking 模型一致
+
 ## [2.0.0] - 2025-10-09
 
 ### ✨ 新增
@@ -106,5 +128,6 @@
 
 ---
 
+[2.0.1]: https://github.com/yourusername/factory-go-api/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/yourusername/factory-go-api/compare/v1.0.0...v2.0.0
 [1.0.0]: https://github.com/yourusername/factory-go-api/releases/tag/v1.0.0
