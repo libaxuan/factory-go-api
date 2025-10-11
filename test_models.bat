@@ -64,8 +64,8 @@ echo [Claude 系列 - Anthropic]
 echo ----------------------------------------
 
 REM 测试 Claude Opus 4.1 (流式和非流式)
-call :test_model "claude-opus-4-1-20250805" "Claude Opus 4.1 (非流式)" "false" %MAX_TOKENS_LOW%
-call :test_model "claude-opus-4-1-20250805" "Claude Opus 4.1 (流式)" "true" %MAX_TOKENS_LOW%
+call :test_model "claude-opus-4-1-20250805" "Claude Opus 4.1 (非流式)" "false" %MAX_TOKENS_HIGH%
+call :test_model "claude-opus-4-1-20250805" "Claude Opus 4.1 (流式)" "true" %MAX_TOKENS_HIGH%
 
 REM 测试 Claude Sonnet 4 (流式和非流式)
 call :test_model "claude-sonnet-4-20250514" "Claude Sonnet 4 (非流式)" "false" %MAX_TOKENS_HIGH%

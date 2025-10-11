@@ -15,7 +15,7 @@
       "name": "Claude Opus 4.1",
       "id": "claude-opus-4-1-20250805",
       "type": "anthropic",
-      "reasoning": "off"
+      "reasoning": "high"
     },
     {
       "name": "Claude Sonnet 4",
