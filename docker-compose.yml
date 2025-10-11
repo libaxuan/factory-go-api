@@ -11,7 +11,9 @@ services:
       - "8001:8000"
     environment:
       - PORT=8000
-      - ANTHROPIC_TARGET_URL=${ANTHROPIC_TARGET_URL:-https://gibuoilncyzqebelqjqz.supabase.co/functions/v1/smooth-handler/https://app.factory.ai/api/llm/a/v1/messages}
+      - FACTORY_API_KEY=${FACTORY_API_KEY}
+      - PROXY_API_KEY=${PROXY_API_KEY}
+      - CONFIG_PATH=config.json
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000/health"]
@@ -32,7 +34,9 @@ services:
       - "8003:8003"
     environment:
       - PORT=8003
-      - ANTHROPIC_TARGET_URL=${ANTHROPIC_TARGET_URL:-https://gibuoilncyzqebelqjqz.supabase.co/functions/v1/smooth-handler/https://app.factory.ai/api/llm/a/v1/messages}
+      - FACTORY_API_KEY=${FACTORY_API_KEY}
+      - PROXY_API_KEY=${PROXY_API_KEY}
+      - CONFIG_PATH=config.json
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8003/v1/health"]
