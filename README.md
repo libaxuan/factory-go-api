@@ -291,21 +291,63 @@ chmod +x restart_and_test.sh
 
 ## 🚢 部署
 
-### Docker
+Factory Go API 支持多种部署方式，适用于不同场景：
+
+### 快速部署
+
+```bash
+# 开发/测试环境 - 使用启动脚本
+./start.sh
+
+# 生产环境 - 使用 Docker Compose（推荐）
+docker-compose up -d factory-proxy-openai
+```
+
+### Docker 部署（推荐）
+
+#### 使用 Docker Compose
+
+```bash
+# 启动服务
+docker-compose up -d factory-proxy-openai
+
+# 查看状态
+docker-compose ps
+
+# 查看日志
+docker-compose logs -f factory-proxy-openai
+```
+
+#### 手动构建
 
 ```bash
 # 构建镜像
-docker build -t factory-api .
+docker build --target openai -t factory-api .
 
 # 运行容器
 docker run -d \
   -p 8003:8003 \
   -e FACTORY_API_KEY=your_key \
+  -e PROXY_API_KEY=your_proxy_key \
   --name factory-api \
   factory-api
 ```
 
-### systemd
+### Ubuntu 服务器部署
+
+我们提供了详细的 Ubuntu 服务器部署指南：
+
+- **[Ubuntu Docker 部署指南](docs/UBUNTU-DOCKER-DEPLOYMENT.md)** ⭐ 推荐
+  - 完整的 Docker 部署步骤
+  - 包含 Docker 安装、配置、运维
+  - 适合生产环境
+  
+- **[Ubuntu 直接部署指南](docs/UBUNTU-DEPLOYMENT.md)**
+  - 不使用 Docker 的传统部署方式
+  - 使用 systemd 管理服务
+  - 适合追求极致性能
+
+### systemd 服务
 
 创建 `/etc/systemd/system/factory-api.service`:
 
