@@ -23,7 +23,7 @@ COPY config.json ./
 COPY docs.html ./
 
 # 构建应用
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o factory-proxy main_multimodel.go
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o factory-proxy-openai main_multimodel.go
 
 # 第二阶段：运行（Anthropic 原生模式）
 FROM alpine:latest AS anthropic
@@ -38,7 +38,7 @@ RUN addgroup -g 1000 app && \
 WORKDIR /app
 
 # 从构建阶段复制二进制文件和配置文件
-COPY --from=builder /build/factory-proxy .
+COPY --from=builder /build/factory-proxy-openai .
 COPY --from=builder /build/config.json .
 COPY --from=builder /build/docs.html .
 
@@ -56,7 +56,7 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:8000/health || exit 1
 
 # 启动命令
-ENTRYPOINT ["./factory-proxy"]
+ENTRYPOINT ["./factory-proxy-openai"]
 
 # 第三阶段：运行（OpenAI 兼容模式）
 FROM alpine:latest AS openai
@@ -71,7 +71,7 @@ RUN addgroup -g 1000 app && \
 WORKDIR /app
 
 # 从构建阶段复制二进制文件和配置文件
-COPY --from=builder /build/factory-proxy .
+COPY --from=builder /build/factory-proxy-openai .
 COPY --from=builder /build/config.json .
 COPY --from=builder /build/docs.html .
 
@@ -89,4 +89,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:8003/v1/health || exit 1
 
 # 启动命令
-ENTRYPOINT ["./factory-proxy"]
+ENTRYPOINT ["./factory-proxy-openai"]

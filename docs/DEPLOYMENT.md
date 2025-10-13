@@ -136,14 +136,14 @@ curl http://localhost:8003/v1/health
 
 ```bash
 # 构建镜像
-docker build --target anthropic -t factory-proxy-anthropic .
+docker build --target anthropic -t factory-proxy-openai-anthropic .
 
 # 运行容器
 docker run -d \
-  --name factory-proxy-anthropic \
+  --name factory-proxy-openai-anthropic \
   -p 8001:8000 \
   -e PORT=8000 \
-  factory-proxy-anthropic
+  factory-proxy-openai-anthropic
 
 # 测试
 curl http://localhost:8001/health
@@ -178,7 +178,7 @@ curl http://localhost:8003/v1/health
 ### 启动 Anthropic 原生模式
 
 ```bash
-docker-compose up -d factory-proxy-anthropic
+docker-compose up -d factory-proxy-openai-anthropic
 
 # 测试
 curl http://localhost:8001/health
@@ -230,7 +230,7 @@ docker-compose up -d --build
 go build -ldflags="-s -w" -o factory-proxy-openai main-openai.go
 
 # Anthropic 模式
-go build -ldflags="-s -w" -o factory-proxy main.go
+go build -ldflags="-s -w" -o factory-proxy-openai main.go
 ```
 
 ### 运行
@@ -240,7 +240,7 @@ go build -ldflags="-s -w" -o factory-proxy main.go
 PORT=8003 ./factory-proxy-openai
 
 # Anthropic 模式
-PORT=8000 ./factory-proxy
+PORT=8000 ./factory-proxy-openai
 ```
 
 ### 特点
@@ -268,9 +268,9 @@ After=network.target
 Type=simple
 User=www-data
 Group=www-data
-WorkingDirectory=/opt/factory-proxy
+WorkingDirectory=/opt/factory-proxy-openai
 Environment="PORT=8003"
-ExecStart=/opt/factory-proxy/factory-proxy-openai
+ExecStart=/opt/factory-proxy-openai/factory-proxy-openai
 Restart=always
 RestartSec=5
 StandardOutput=journal
@@ -281,7 +281,7 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/opt/factory-proxy
+ReadWritePaths=/opt/factory-proxy-openai
 
 [Install]
 WantedBy=multi-user.target
@@ -309,7 +309,7 @@ sudo journalctl -u factory-proxy-openai -f
 ### 2. 使用 Nginx 反向代理
 
 ```nginx
-# /etc/nginx/sites-available/factory-proxy
+# /etc/nginx/sites-available/factory-proxy-openai
 
 upstream factory_proxy {
     server 127.0.0.1:8003;
@@ -331,8 +331,8 @@ server {
     add_header X-XSS-Protection "1; mode=block";
 
     # 日志
-    access_log /var/log/nginx/factory-proxy-access.log;
-    error_log /var/log/nginx/factory-proxy-error.log;
+    access_log /var/log/nginx/factory-proxy-openai-access.log;
+    error_log /var/log/nginx/factory-proxy-openai-error.log;
 
     # 代理配置
     location / {
@@ -423,22 +423,22 @@ networks:
 docker swarm init
 
 # 部署服务
-docker stack deploy -c docker-stack.yml factory-proxy
+docker stack deploy -c docker-stack.yml factory-proxy-openai
 
 # 查看服务
 docker service ls
 
 # 查看服务日志
-docker service logs -f factory-proxy_factory-proxy-openai
+docker service logs -f factory-proxy-openai_factory-proxy-openai
 
 # 扩容
-docker service scale factory-proxy_factory-proxy-openai=5
+docker service scale factory-proxy-openai_factory-proxy-openai=5
 
 # 更新服务
-docker service update factory-proxy_factory-proxy-openai
+docker service update factory-proxy-openai_factory-proxy-openai
 
 # 删除服务
-docker stack rm factory-proxy
+docker stack rm factory-proxy-openai
 ```
 
 ### 4. 使用 Kubernetes

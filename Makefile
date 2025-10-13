@@ -9,8 +9,8 @@ start: run-openai
 # 构建 Anthropic 原生模式
 build:
 	@echo "🔨 构建 Anthropic 原生模式..."
-	go build -ldflags="-s -w" -o factory-proxy main.go
-	@echo "✅ 构建完成: factory-proxy"
+	go build -ldflags="-s -w" -o factory-proxy-openai main.go
+	@echo "✅ 构建完成: factory-proxy-openai"
 
 # 构建 OpenAI 兼容模式
 build-openai:
@@ -28,7 +28,7 @@ install:
 # 运行 Anthropic 原生模式
 run: build
 	@echo "🚀 启动 Anthropic 原生模式..."
-	./factory-proxy
+	./factory-proxy-openai
 
 # 运行 OpenAI 兼容模式
 run-openai: build-openai
@@ -67,7 +67,7 @@ lint:
 # 清理构建文件
 clean:
 	@echo "🧹 清理构建文件..."
-	rm -f factory-proxy factory-proxy-openai
+	rm -f factory-proxy-openai factory-proxy-openai
 	rm -f *.log *.pid
 	rm -f coverage.txt
 	go clean -cache
@@ -78,19 +78,19 @@ build-all:
 	@echo "🔨 构建所有平台..."
 	@mkdir -p dist
 	# Linux AMD64
-	GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o dist/factory-proxy-linux-amd64 main.go
+	GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o dist/factory-proxy-openai-linux-amd64 main.go
 	GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o dist/factory-proxy-openai-linux-amd64 main-openai.go
 	# Linux ARM64
-	GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o dist/factory-proxy-linux-arm64 main.go
+	GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o dist/factory-proxy-openai-linux-arm64 main.go
 	GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o dist/factory-proxy-openai-linux-arm64 main-openai.go
 	# macOS AMD64
-	GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o dist/factory-proxy-darwin-amd64 main.go
+	GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o dist/factory-proxy-openai-darwin-amd64 main.go
 	GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o dist/factory-proxy-openai-darwin-amd64 main-openai.go
 	# macOS ARM64
-	GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o dist/factory-proxy-darwin-arm64 main.go
+	GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o dist/factory-proxy-openai-darwin-arm64 main.go
 	GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o dist/factory-proxy-openai-darwin-arm64 main-openai.go
 	# Windows AMD64
-	GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o dist/factory-proxy-windows-amd64.exe main.go
+	GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o dist/factory-proxy-openai-windows-amd64.exe main.go
 	GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o dist/factory-proxy-openai-windows-amd64.exe main-openai.go
 	@echo "✅ 所有平台构建完成，文件位于 dist/ 目录"
 

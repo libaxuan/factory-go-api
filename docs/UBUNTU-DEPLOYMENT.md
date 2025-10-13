@@ -223,7 +223,7 @@ curl http://localhost:8003/v1/models \
 ### 6.1 创建服务文件
 
 ```bash
-sudo nano /etc/systemd/system/factory-proxy.service
+sudo nano /etc/systemd/system/factory-proxy-openai.service
 ```
 
 ### 6.2 填写配置
@@ -257,13 +257,13 @@ WantedBy=multi-user.target
 sudo systemctl daemon-reload
 
 # 启用开机自启
-sudo systemctl enable factory-proxy
+sudo systemctl enable factory-proxy-openai
 
 # 启动服务
-sudo systemctl start factory-proxy
+sudo systemctl start factory-proxy-openai
 
 # 查看状态
-sudo systemctl status factory-proxy
+sudo systemctl status factory-proxy-openai
 ```
 
 **成功标志：** 看到 `Active: active (running)` 和绿色圆点
@@ -272,10 +272,10 @@ sudo systemctl status factory-proxy
 
 ```bash
 # 实时日志
-sudo journalctl -u factory-proxy -f
+sudo journalctl -u factory-proxy-openai -f
 
 # 最近50行
-sudo journalctl -u factory-proxy -n 50
+sudo journalctl -u factory-proxy-openai -n 50
 ```
 
 ---
@@ -315,7 +315,7 @@ sudo systemctl enable nginx
 ### 8.2 创建配置文件
 
 ```bash
-sudo nano /etc/nginx/sites-available/factory-proxy
+sudo nano /etc/nginx/sites-available/factory-proxy-openai
 ```
 
 ### 8.3 填写配置
@@ -330,8 +330,8 @@ server {
     listen 80;
     server_name api.yourdomain.com;
 
-    access_log /var/log/nginx/factory-proxy-access.log;
-    error_log /var/log/nginx/factory-proxy-error.log;
+    access_log /var/log/nginx/factory-proxy-openai-access.log;
+    error_log /var/log/nginx/factory-proxy-openai-error.log;
 
     location / {
         proxy_pass http://factory_proxy;
@@ -353,7 +353,7 @@ server {
 
 ```bash
 # 创建软链接
-sudo ln -s /etc/nginx/sites-available/factory-proxy /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/factory-proxy-openai /etc/nginx/sites-enabled/
 
 # 测试配置
 sudo nginx 
@@ -384,35 +384,35 @@ sudo certbot renew --dry-run
 
 ```bash
 # 查看服务状态
-sudo systemctl status factory-proxy
+sudo systemctl status factory-proxy-openai
 
 # 启动服务
-sudo systemctl start factory-proxy
+sudo systemctl start factory-proxy-openai
 
 # 停止服务
-sudo systemctl stop factory-proxy
+sudo systemctl stop factory-proxy-openai
 
 # 重启服务
-sudo systemctl restart factory-proxy
+sudo systemctl restart factory-proxy-openai
 
 # 查看是否开机自启
-sudo systemctl is-enabled factory-proxy
+sudo systemctl is-enabled factory-proxy-openai
 ```
 
 ### 日志管理
 
 ```bash
 # 实时查看日志
-sudo journalctl -u factory-proxy -f
+sudo journalctl -u factory-proxy-openai -f
 
 # 查看最近 100 行
-sudo journalctl -u factory-proxy -n 100
+sudo journalctl -u factory-proxy-openai -n 100
 
 # 查看今天的日志
-sudo journalctl -u factory-proxy --since today
+sudo journalctl -u factory-proxy-openai --since today
 
 # 查看特定时间段
-sudo journalctl -u factory-proxy --since "2025-10-09 10:00:00" --until "2025-10-09 12:00:00"
+sudo journalctl -u factory-proxy-openai --since "2025-10-09 10:00:00" --until "2025-10-09 12:00:00"
 
 # 清理旧日志（保留最近 7 天）
 sudo journalctl --vacuum-time=7d
@@ -428,13 +428,13 @@ nano .env
 # 2. 修改后保存
 
 # 3. 重启服务使配置生效
-sudo systemctl restart factory-proxy
+sudo systemctl restart factory-proxy-openai
 
 # 4. 查看服务状态
-sudo systemctl status factory-proxy
+sudo systemctl status factory-proxy-openai
 
 # 5. 查看日志确认新配置生效
-sudo journalctl -u factory-proxy -n 20
+sudo journalctl -u factory-proxy-openai -n 20
 ```
 
 ### 代码更新
@@ -450,7 +450,7 @@ git pull
 go build -ldflags="-s -w" -o factory-proxy-openai main_multimodel.go
 
 # 4. 重启服务
-sudo systemctl restart factory-proxy
+sudo systemctl restart factory-proxy-openai
 
 # 5. 验证服务
 curl http://localhost:8003/health
@@ -460,10 +460,10 @@ curl http://localhost:8003/health
 
 ```bash
 # 查看服务资源占用
-sudo systemctl status factory-proxy
+sudo systemctl status factory-proxy-openai
 
 # 查看进程详细信息
-ps aux | grep factory-proxy
+ps aux | grep factory-proxy-openai
 
 # 查看端口监听
 sudo netstat -tulnp | grep 8003
@@ -478,13 +478,13 @@ sudo ss -tulnp | grep 8003
 
 ### 问题 1：服务启动失败
 
-**症状：** `sudo systemctl status factory-proxy` 显示 `failed` 或 `inactive`
+**症状：** `sudo systemctl status factory-proxy-openai` 显示 `failed` 或 `inactive`
 
 **排查步骤：**
 
 ```bash
 # 1. 查看详细日志
-sudo journalctl -u factory-proxy -n 100 --no-pager
+sudo journalctl -u factory-proxy-openai -n 100 --no-pager
 
 # 2. 常见错误及解决方案：
 
@@ -521,7 +521,7 @@ curl http://localhost:8003/v1/models \
   -H "Authorization: Bearer YOUR_PROXY_API_KEY_FROM_ENV"
 
 # 3. 查看日志中的验证失败信息
-sudo journalctl -u factory-proxy -n 50 | grep "验证失败"
+sudo journalctl -u factory-proxy-openai -n 50 | grep "验证失败"
 ```
 
 ### 问题 3：健康检查返回 404
@@ -547,7 +547,7 @@ curl http://localhost:8003/health
 
 ```bash
 # 1. 检查服务是否运行
-sudo systemctl status factory-proxy
+sudo systemctl status factory-proxy-openai
 
 # 2. 检查本地端口监听
 sudo netstat -tulnp | grep 8003
@@ -571,13 +571,13 @@ curl http://YOUR_SERVER_IP:8003/health
 
 ```bash
 # systemd 服务需要重启才能重新加载环境变量
-sudo systemctl restart factory-proxy
+sudo systemctl restart factory-proxy-openai
 
 # 查看日志确认新配置
-sudo journalctl -u factory-proxy -n 20
+sudo journalctl -u factory-proxy-openai -n 20
 
 # 确认 systemd 配置中有 EnvironmentFile
-cat /etc/systemd/system/factory-proxy.service | grep EnvironmentFile
+cat /etc/systemd/system/factory-proxy-openai.service | grep EnvironmentFile
 ```
 
 ### 问题 6：构建失败
@@ -615,13 +615,13 @@ echo "1. Go 版本:"
 go version
 echo ""
 echo "2. 服务状态:"
-sudo systemctl status factory-proxy --no-pager
+sudo systemctl status factory-proxy-openai --no-pager
 echo ""
 echo "3. 端口监听:"
 sudo netstat -tulnp | grep 8003
 echo ""
 echo "4. 最近日志:"
-sudo journalctl -u factory-proxy -n 20 --no-pager
+sudo journalctl -u factory-proxy-openai -n 20 --no-pager
 echo ""
 echo "5. 环境文件:"
 ls -la /home/factory-go-api/.env
@@ -727,21 +727,21 @@ curl -X POST http://localhost:8003/v1/chat/completions \
 
 ```bash
 # 服务管理
-sudo systemctl start factory-proxy      # 启动
-sudo systemctl stop factory-proxy       # 停止
-sudo systemctl restart factory-proxy    # 重启
-sudo systemctl status factory-proxy     # 状态
+sudo systemctl start factory-proxy-openai      # 启动
+sudo systemctl stop factory-proxy-openai       # 停止
+sudo systemctl restart factory-proxy-openai    # 重启
+sudo systemctl status factory-proxy-openai     # 状态
 
 # 日志查看
-sudo journalctl -u factory-proxy -f     # 实时日志
-sudo journalctl -u factory-proxy -n 50  # 最近50行
+sudo journalctl -u factory-proxy-openai -f     # 实时日志
+sudo journalctl -u factory-proxy-openai -n 50  # 最近50行
 
 # 端口检查
 sudo lsof -i :8003                      # 查看端口占用
 sudo netstat -tulnp | grep 8003         # 查看端口监听
 
 # 进程管理
-ps aux | grep factory-proxy             # 查看进程
+ps aux | grep factory-proxy-openai             # 查看进程
 sudo pkill factory-proxy-openai         # 停止进程
 ```
 

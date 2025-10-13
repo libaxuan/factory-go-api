@@ -140,8 +140,8 @@ make help           # 帮助
 
 ```bash
 # 1. 克隆项目
-git clone https://github.com/libaxuan/factory-proxy.git
-cd factory-proxy/factory-go
+git clone https://github.com/libaxuan/factory-proxy-openai.git
+cd factory-proxy-openai/factory-go
 
 # 2. 安装依赖
 make install

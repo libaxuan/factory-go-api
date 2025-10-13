@@ -19,7 +19,7 @@
 - **修复 Docker 构建失败** - 解决 `docker compose up -d` 时找不到 `main-openai.go` 文件的问题
   - 修正 [`Dockerfile`](Dockerfile:19) 复制文件路径，使用实际存在的 [`main_multimodel.go`](main_multimodel.go:1)
   - 添加必要的配置文件和目录复制：`config/`, `transformers/`, `config.json`, `docs.html`
-  - 统一两个运行阶段的二进制文件为 `factory-proxy`
+  - 统一两个运行阶段的二进制文件为 `factory-proxy-openai`
   - 更新 [`docker-compose.yml`](docker-compose.yml:1) 环境变量配置，使用 `FACTORY_API_KEY` 和 `PROXY_API_KEY`
 
 ### 📚 文档

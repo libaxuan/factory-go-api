@@ -6,8 +6,8 @@
 ### 步骤 1: 获取代码
 
 ```bash
-git clone https://github.com/libaxuan/factory-proxy.git
-cd factory-proxy/factory-go-api
+git clone https://github.com/libaxuan/factory-proxy-openai.git
+cd factory-proxy-openai/factory-go-api
 ```
 
 ### 步骤 2: 构建项目
@@ -135,17 +135,17 @@ docker-compose down
 
 ```bash
 # 构建镜像
-docker build -t factory-proxy --target openai .
+docker build -t factory-proxy-openai --target openai .
 
 # 运行容器
 docker run -d \
   -p 8003:8003 \
   -e PORT=8003 \
-  --name factory-proxy \
-  factory-proxy
+  --name factory-proxy-openai \
+  factory-proxy-openai
 
 # 查看日志
-docker logs -f factory-proxy
+docker logs -f factory-proxy-openai
 ```
 
 ## 🛠️ 使用 Makefile
@@ -291,7 +291,7 @@ make build-openai
 
 2. 尝试使用 Python/Node.js SDK
 3. 部署到生产环境
-4. 查看 [GitHub Issues](https://github.com/libaxuan/factory-proxy/issues) 参与讨论
+4. 查看 [GitHub Issues](https://github.com/libaxuan/factory-proxy-openai/issues) 参与讨论
 
 ---
 

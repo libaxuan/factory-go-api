@@ -2,11 +2,11 @@ version: '3.8'
 
 services:
   # Anthropic 原生模式
-  factory-proxy-anthropic:
+  factory-proxy-openai-anthropic:
     build:
       context: .
       target: anthropic
-    container_name: factory-proxy-anthropic
+    container_name: factory-proxy-openai-anthropic
     ports:
       - "8001:8000"
     environment:

@@ -281,7 +281,7 @@ PORT=9000 ./factory-proxy-openai
 
 ### 使用 systemd
 
-创建 `/etc/systemd/system/factory-proxy.service`：
+创建 `/etc/systemd/system/factory-proxy-openai.service`：
 
 ```ini
 [Unit]
@@ -291,9 +291,9 @@ After=network.target
 [Service]
 Type=simple
 User=www-data
-WorkingDirectory=/opt/factory-proxy
+WorkingDirectory=/opt/factory-proxy-openai
 Environment="PORT=8003"
-ExecStart=/opt/factory-proxy/factory-proxy-openai
+ExecStart=/opt/factory-proxy-openai/factory-proxy-openai
 Restart=always
 
 [Install]
@@ -302,8 +302,8 @@ WantedBy=multi-user.target
 
 启动服务：
 ```bash
-sudo systemctl enable factory-proxy
-sudo systemctl start factory-proxy
+sudo systemctl enable factory-proxy-openai
+sudo systemctl start factory-proxy-openai
 ```
 
 ## 📝 许可证
