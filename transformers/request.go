@@ -305,12 +305,14 @@ func GetAnthropicHeaders(authHeader string, clientHeaders map[string]string, isS
 	headers := map[string]string{
 		"content-type":      "application/json",
 		"authorization":     authHeader,
-		"anthropic-version": "2023-06-01",
+		"anthropic-version": "2023-06-01", // Anthropic API 版本标识符（推荐稳定版本）
 		"user-agent":        config.GetUserAgent(),
 	}
 
 	if isStreaming {
 		headers["accept"] = "text/event-stream"
+	} else {
+		headers["accept"] = "application/json"
 	}
 
 	// 传递客户端头
@@ -352,7 +354,15 @@ func GetFactoryOpenAIHeaders(authHeader string, clientHeaders map[string]string)
 		"x-session-id":             sessionID,
 		"x-assistant-message-id":   messageID,
 		"user-agent":               config.GetUserAgent(),
+		"accept":                   "application/json, text/event-stream",
+		"accept-encoding":          "gzip, deflate, br",
+		"accept-language":          "en-US,en;q=0.9",
 		"connection":               "keep-alive",
+		"origin":                   "https://app.factory.ai",
+		"referer":                  "https://app.factory.ai/",
+		"sec-fetch-dest":           "empty",
+		"sec-fetch-mode":           "cors",
+		"sec-fetch-site":           "same-origin",
 		"x-stainless-arch":         "x64",
 		"x-stainless-lang":         "js",
 		"x-stainless-os":           "MacOS",

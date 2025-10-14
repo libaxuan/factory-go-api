@@ -9,21 +9,14 @@ RUN apk add --no-cache git ca-certificates tzdata
 # 设置工作目录
 WORKDIR /build
 
-# 复制 go.mod 和 go.sum
-COPY go.mod go.sum ./
+# 复制所有源代码和配置
+COPY . .
 
-# 下载依赖
-RUN go mod download && go mod verify
-
-# 复制源代码
-COPY main_multimodel.go ./
-COPY config/ ./config/
-COPY transformers/ ./transformers/
-COPY config.json ./
-COPY docs.html ./
-
-# 构建应用
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o factory-proxy-openai main_multimodel.go
+# 下载依赖并构建
+RUN go mod download && \
+    go mod download golang.org/x/net && \
+    go mod download golang.org/x/text && \
+    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o factory-proxy-openai main_multimodel.go
 
 # 第二阶段：运行（Anthropic 原生模式）
 FROM alpine:latest AS anthropic

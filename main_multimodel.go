@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"factory-go-api/config"
 	"factory-go-api/transformers"
@@ -12,9 +13,55 @@ import (
 	"os"
 	"strings"
 	"time"
+	"golang.org/x/net/http2"
 )
 
-var startTime = time.Now()
+var (
+	startTime = time.Now()
+	httpClient *http.Client
+)
+
+// 初始化 HTTP 客户端，支持 HTTP/2 并模拟浏览器特征
+func initHTTPClient() {
+	// 配置 TLS 以模拟现代浏览器
+	tlsConfig := &tls.Config{
+		MinVersion: tls.VersionTLS12,
+		MaxVersion: tls.VersionTLS13,
+		// 使用常见的浏览器 Cipher Suites
+		CipherSuites: []uint16{
+			tls.TLS_AES_128_GCM_SHA256,
+			tls.TLS_AES_256_GCM_SHA384,
+			tls.TLS_CHACHA20_POLY1305_SHA256,
+			tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+			tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+			tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+			tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+		},
+		InsecureSkipVerify: false,
+	}
+
+	// 创建支持 HTTP/2 的 Transport
+	transport := &http.Transport{
+		TLSClientConfig:       tlsConfig,
+		ForceAttemptHTTP2:     true,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
+
+	// 配置 HTTP/2
+	if err := http2.ConfigureTransport(transport); err != nil {
+		log.Printf("⚠️ HTTP/2 配置失败，将使用 HTTP/1.1: %v", err)
+	}
+
+	httpClient = &http.Client{
+		Transport: transport,
+		Timeout:   120 * time.Second,
+	}
+
+	log.Printf("✅ HTTP 客户端初始化完成（支持 HTTP/2）")
+}
 
 // 获取环境变量，支持默认值
 func getEnv(key, defaultValue string) string {
@@ -212,9 +259,8 @@ func handleAnthropicRequest(w http.ResponseWriter, r *http.Request, openaiReq *t
 		proxyReq.Header.Set(key, value)
 	}
 
-	// 发送请求
-	client := &http.Client{Timeout: 120 * time.Second}
-	resp, err := client.Do(proxyReq)
+	// 发送请求（使用全局配置的客户端）
+	resp, err := httpClient.Do(proxyReq)
 	if err != nil {
 		log.Printf("错误: 请求失败: %v", err)
 		http.Error(w, `{"error": {"message": "Request to upstream failed", "type": "upstream_error"}}`, http.StatusBadGateway)
@@ -274,9 +320,8 @@ func handleFactoryOpenAIRequest(w http.ResponseWriter, r *http.Request, openaiRe
 		proxyReq.Header.Set(key, value)
 	}
 
-	// 发送请求
-	client := &http.Client{Timeout: 120 * time.Second}
-	resp, err := client.Do(proxyReq)
+	// 发送请求（使用全局配置的客户端）
+	resp, err := httpClient.Do(proxyReq)
 	if err != nil {
 		log.Printf("错误: 请求失败: %v", err)
 		http.Error(w, `{"error": {"message": "Request to upstream failed", "type": "upstream_error"}}`, http.StatusBadGateway)
@@ -470,6 +515,9 @@ func extractClientHeaders(r *http.Request) map[string]string {
 }
 
 func main() {
+	// 初始化 HTTP 客户端
+	initHTTPClient()
+
 	// 验证必需的环境变量
 	factoryAPIKey := getEnv("FACTORY_API_KEY", "")
 	if factoryAPIKey == "" {
