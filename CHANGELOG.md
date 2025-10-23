@@ -5,6 +5,38 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/) 规范，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.1.0] - 2025-10-23
+
+### ✨ 新增
+
+- **Brotli 压缩支持** - 添加对 Factory API 返回的 Brotli (br) 压缩响应的自动解压缩支持
+  - 集成 `github.com/andybalholm/brotli` 库
+  - 自动检测 `Content-Encoding` 响应头（支持 gzip、br）
+  - 解决了之前无法解析压缩响应的问题
+
+### 🔧 优化
+
+- **响应处理增强** - 改进响应体读取和解压缩逻辑
+  - 统一处理 gzip 和 Brotli 压缩格式
+  - 添加详细的压缩类型检测日志
+  - 优化错误处理和日志输出
+
+### 📦 依赖
+
+- **新增依赖** - `github.com/andybalholm/brotli v1.2.0`
+- **Go 版本升级** - 从 1.21 升级到 1.22
+
+### 🎁 附加
+
+- **包含优化的 Kilo Code 插件** - 项目现在包含 `kilo-code-4.109.2.vsix`
+  - 移除了所有 "You are Kilo Code" 身份定义
+  - 清空了 RULES 限制部分
+  - 大幅减少提示词长度，避免触发 API 限制
+
+### 📚 文档
+
+- **README 更新** - 添加使用项目内 Kilo Code 插件的重要提示
+
 ## [2.0.1] - 2025-10-10
 
 ### 🔄 变更

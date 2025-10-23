@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"compress/gzip"
 	"crypto/tls"
 	"encoding/json"
 	"factory-go-api/config"
@@ -13,12 +14,15 @@ import (
 	"os"
 	"strings"
 	"time"
+	
+	"github.com/andybalholm/brotli"
 	"golang.org/x/net/http2"
 )
 
 var (
 	startTime = time.Now()
 	httpClient *http.Client
+	debugMode = false // 调试模式，默认关闭
 )
 
 // 初始化 HTTP 客户端，支持 HTTP/2 并模拟浏览器特征
@@ -69,6 +73,55 @@ func getEnv(key, defaultValue string) string {
 		return value
 	}
 	return defaultValue
+}
+
+// 读取响应体并自动处理压缩
+func readResponseBody(resp *http.Response) ([]byte, error) {
+	var reader io.Reader = resp.Body
+	contentEncoding := resp.Header.Get("Content-Encoding")
+	
+	// 根据 Content-Encoding 头选择解压缩方式
+	switch contentEncoding {
+	case "gzip":
+		if debugMode {
+			log.Printf("📦 检测到 gzip 压缩（Content-Encoding），正在解压...")
+		}
+		gzipReader, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("创建 gzip reader 失败: %v", err)
+		}
+		defer gzipReader.Close()
+		reader = gzipReader
+		
+	case "br":
+		if debugMode {
+			log.Printf("📦 检测到 Brotli 压缩（Content-Encoding），正在解压...")
+		}
+		reader = brotli.NewReader(resp.Body)
+		
+	case "":
+		// 无压缩
+		if debugMode {
+			log.Printf("ℹ️ 无压缩编码")
+		}
+		
+	default:
+		if debugMode {
+			log.Printf("⚠️ 未知的压缩编码: %s", contentEncoding)
+		}
+	}
+	
+	// 读取（可能已解压的）数据
+	body, err := io.ReadAll(reader)
+	if err != nil {
+		return nil, fmt.Errorf("读取响应体失败: %v", err)
+	}
+	
+	if debugMode && contentEncoding != "" {
+		log.Printf("✅ 解压成功，解压后大小: %d 字节", len(body))
+	}
+	
+	return body, nil
 }
 
 // min 函数
@@ -194,6 +247,22 @@ func chatCompletionsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
+	// 📝 详细日志：记录完整请求（仅调试模式）
+	if debugMode {
+		log.Printf("📥 ========== 收到请求 ==========")
+		log.Printf("📥 Method: %s", r.Method)
+		log.Printf("📥 URL: %s", r.URL.String())
+		log.Printf("📥 Headers:")
+		for key, values := range r.Header {
+			for _, value := range values {
+				log.Printf("📥   %s: %s", key, value)
+			}
+		}
+		log.Printf("📥 Request Body:")
+		log.Printf("📥 %s", string(bodyBytes))
+		log.Printf("📥 ================================")
+	}
+
 	// 解析 OpenAI 请求
 	var openaiReq transformers.OpenAIRequest
 	if err := json.Unmarshal(bodyBytes, &openaiReq); err != nil {
@@ -210,7 +279,9 @@ func chatCompletionsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("✅ %s [%s] stream=%v", openaiReq.Model, model.Type, openaiReq.Stream)
+	if debugMode {
+		log.Printf("✅ %s [%s] stream=%v", openaiReq.Model, model.Type, openaiReq.Stream)
+	}
 
 	// 根据模型类型路由请求
 	switch model.Type {
@@ -272,7 +343,9 @@ func handleAnthropicRequest(w http.ResponseWriter, r *http.Request, openaiReq *t
 		}
 	}()
 
-	log.Printf("📥 Anthropic 响应: %d", resp.StatusCode)
+	if debugMode {
+		log.Printf("📥 Anthropic 响应: %d", resp.StatusCode)
+	}
 
 	// 处理响应
 	if openaiReq.Stream {
@@ -320,6 +393,17 @@ func handleFactoryOpenAIRequest(w http.ResponseWriter, r *http.Request, openaiRe
 		proxyReq.Header.Set(key, value)
 	}
 
+	// 调试模式：保存请求到文件
+	if debugMode && proxyReq.Body != nil {
+		bodyBytes, _ := io.ReadAll(proxyReq.Body)
+		proxyReq.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+		timestamp := time.Now().Format("20060102_150405")
+		requestFile := fmt.Sprintf("request_openai_%s.json", timestamp)
+		if err := os.WriteFile(requestFile, bodyBytes, 0644); err == nil {
+			log.Printf("💾 完整请求已保存到: %s", requestFile)
+		}
+	}
+
 	// 发送请求（使用全局配置的客户端）
 	resp, err := httpClient.Do(proxyReq)
 	if err != nil {
@@ -333,7 +417,9 @@ func handleFactoryOpenAIRequest(w http.ResponseWriter, r *http.Request, openaiRe
 		}
 	}()
 
-	log.Printf("📥 Factory OpenAI 响应: %d", resp.StatusCode)
+	if debugMode {
+		log.Printf("📥 Factory OpenAI 响应: %d", resp.StatusCode)
+	}
 
 	// 处理响应
 	if openaiReq.Stream {
@@ -347,8 +433,8 @@ func handleFactoryOpenAIRequest(w http.ResponseWriter, r *http.Request, openaiRe
 
 // 处理 Anthropic 非流式响应
 func handleAnthropicNonStreamResponse(w http.ResponseWriter, resp *http.Response, modelID string) {
-	// 读取响应体
-	body, err := io.ReadAll(resp.Body)
+	// 读取响应体（自动处理 gzip）
+	body, err := readResponseBody(resp)
 	if err != nil {
 		log.Printf("错误: 读取响应失败: %v", err)
 		http.Error(w, `{"error": {"message": "Failed to read response", "type": "server_error"}}`, http.StatusInternalServerError)
@@ -369,6 +455,7 @@ func handleAnthropicNonStreamResponse(w http.ResponseWriter, resp *http.Response
 	var anthropicResp map[string]interface{}
 	if err := json.Unmarshal(body, &anthropicResp); err != nil {
 		log.Printf("错误: 解析响应失败: %v", err)
+		log.Printf("原始响应内容: %s", string(body))
 		http.Error(w, `{"error": {"message": "Failed to parse response", "type": "server_error"}}`, http.StatusInternalServerError)
 		return
 	}
@@ -418,12 +505,33 @@ func handleAnthropicStreamResponse(w http.ResponseWriter, resp *http.Response, m
 
 // 处理 Factory OpenAI 非流式响应
 func handleFactoryOpenAINonStreamResponse(w http.ResponseWriter, resp *http.Response, modelID string) {
-	// 读取响应体
-	body, err := io.ReadAll(resp.Body)
+	// 调试模式：记录响应头
+	if debugMode {
+		log.Printf("📋 响应头:")
+		for key, values := range resp.Header {
+			for _, value := range values {
+				log.Printf("   %s: %s", key, value)
+			}
+		}
+	}
+	
+	// 读取响应体（自动处理压缩）
+	body, err := readResponseBody(resp)
 	if err != nil {
 		log.Printf("错误: 读取响应失败: %v", err)
 		http.Error(w, `{"error": {"message": "Failed to read response", "type": "server_error"}}`, http.StatusInternalServerError)
 		return
+	}
+	
+	// 调试模式：保存完整响应到文件
+	if debugMode {
+		timestamp := time.Now().Format("20060102_150405")
+		responseFile := fmt.Sprintf("response_%s.bin", timestamp)
+		if err := os.WriteFile(responseFile, body, 0644); err != nil {
+			log.Printf("⚠️ 无法保存响应到文件: %v", err)
+		} else {
+			log.Printf("💾 完整响应已保存到: %s", responseFile)
+		}
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -440,7 +548,15 @@ func handleFactoryOpenAINonStreamResponse(w http.ResponseWriter, resp *http.Resp
 	var factoryResp map[string]interface{}
 	if err := json.Unmarshal(body, &factoryResp); err != nil {
 		log.Printf("错误: 解析响应失败: %v", err)
-		http.Error(w, `{"error": {"message": "Failed to parse response", "type": "server_error"}}`, http.StatusInternalServerError)
+		if debugMode {
+			log.Printf("原始响应内容（前200字节）: %s", string(body[:min(200, len(body))]))
+			log.Printf("原始响应内容（十六进制前50字节）: % x", body[:min(50, len(body))])
+		}
+		// 返回错误
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		errorMsg := `{"error": {"message": "Failed to parse Factory API response", "type": "server_error"}}`
+		w.Write([]byte(errorMsg))
 		return
 	}
 
@@ -517,6 +633,12 @@ func extractClientHeaders(r *http.Request) map[string]string {
 func main() {
 	// 初始化 HTTP 客户端
 	initHTTPClient()
+	
+	// 检查是否启用调试模式
+	if getEnv("DEBUG", "") == "true" {
+		debugMode = true
+		log.Printf("🐛 调试模式已启用")
+	}
 
 	// 验证必需的环境变量
 	factoryAPIKey := getEnv("FACTORY_API_KEY", "")
