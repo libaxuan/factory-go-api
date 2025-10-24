@@ -93,11 +93,28 @@ func TransformToAnthropic(req *OpenAIRequest) *AnthropicRequest {
 		Stream:   req.Stream,
 	}
 
-	// 设置 max_tokens
+	// 设置 max_tokens，根据模型限制设置合理的默认值
+	// Claude Opus 4.1: 最大 32,000 (实际限制)
+	// Claude Sonnet 4: 最大 64,000 (实际限制)
+	// Claude Sonnet 4.5: 最大 64,000 (实际限制)
+	maxLimit := 64000 // 默认最大值
+	switch req.Model {
+	case "claude-opus-4-1-20250805":
+		maxLimit = 32000
+	case "claude-sonnet-4-20250514", "claude-sonnet-4-5-20250929":
+		maxLimit = 64000
+	}
+	
 	if req.MaxTokens > 0 {
-		anthropicReq.MaxTokens = req.MaxTokens
+		// 用户指定了 max_tokens，限制在模型上限内
+		if req.MaxTokens > maxLimit {
+			anthropicReq.MaxTokens = maxLimit
+		} else {
+			anthropicReq.MaxTokens = req.MaxTokens
+		}
 	} else {
-		anthropicReq.MaxTokens = 64000 // 默认值
+		// 未指定时使用模型上限作为默认值
+		anthropicReq.MaxTokens = maxLimit
 	}
 
 	// 设置 temperature
@@ -189,8 +206,20 @@ func TransformToFactoryOpenAI(req *OpenAIRequest) *FactoryOpenAIRequest {
 	}
 
 	// 转换 max_tokens
+	// GPT-5: 最大 128,000
+	// GPT-5 Codex: 最大 128,000
+	maxLimit := 128000
+	
 	if req.MaxTokens > 0 {
-		factoryReq.MaxOutputTokens = req.MaxTokens
+		// 用户指定了 max_tokens，限制在模型上限内
+		if req.MaxTokens > maxLimit {
+			factoryReq.MaxOutputTokens = maxLimit
+		} else {
+			factoryReq.MaxOutputTokens = req.MaxTokens
+		}
+	} else {
+		// 未指定时使用模型上限作为默认值
+		factoryReq.MaxOutputTokens = maxLimit
 	}
 
 	// 转换其他参数
