@@ -16,6 +16,7 @@ import (
 	"time"
 	
 	"github.com/andybalholm/brotli"
+	"github.com/joho/godotenv"
 	"golang.org/x/net/http2"
 )
 
@@ -24,6 +25,13 @@ var (
 	httpClient *http.Client
 	debugMode = false // 调试模式，默认关闭
 )
+
+// 加载 .env 文件中的环境变量
+func init() {
+	if err := godotenv.Load(); err != nil {
+		log.Printf("⚠️ 无法加载 .env 文件: %v", err)
+	}
+}
 
 // 初始化 HTTP 客户端，支持 HTTP/2 并模拟浏览器特征
 func initHTTPClient() {
