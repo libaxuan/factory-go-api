@@ -1,3 +1,5 @@
+
+
 # Factory Go API
 
 <div align="center">
@@ -292,7 +294,7 @@ go vet ./...
 
 # 运行完整模型测试
 chmod +x restart_and_test.sh
-./restart_and_test.sh  # 重启服务并测试所有 7 个模型配置
+./restart_and_test.sh  # 重启服务并测试所有 10 种模型配置
 ```
 
 ## 🚢 部署
