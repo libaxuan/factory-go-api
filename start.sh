@@ -32,12 +32,12 @@ fi
 # 安装依赖和构建（静默模式）
 if [ "$VERBOSE" = "true" ]; then
     echo "📦 安装依赖..."
-    go mod tidy
+    GOTOOLCHAIN=go1.26.10 go mod tidy
     echo "🔨 构建服务..."
-    go build -o factory-api main_multimodel.go
+    GOTOOLCHAIN=go1.26.10 go build -o factory-api main_multimodel.go
 else
-    go mod tidy > /dev/null 2>&1
-    go build -o factory-api main_multimodel.go > /dev/null 2>&1
+    GOTOOLCHAIN=go1.26.10 go mod tidy > /dev/null 2>&1
+    GOTOOLCHAIN=go1.26.10 go build -o factory-api main_multimodel.go > /dev/null 2>&1
 fi
 
 if [ $? -eq 0 ]; then

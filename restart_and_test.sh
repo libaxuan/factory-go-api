@@ -12,7 +12,7 @@ fi
 
 # 重新编译
 echo "🔨 重新编译..."
-go build -o factory-api main_multimodel.go
+GOTOOLCHAIN=go1.26.10 go build -o factory-api main_multimodel.go
 
 if [ $? -ne 0 ]; then
     echo "❌ 编译失败"

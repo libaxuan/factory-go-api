@@ -2,6 +2,8 @@ module factory-go-api
 
 go 1.22
 
+toolchain go1.26.10
+
 require (
 	github.com/andybalholm/brotli v1.2.0
 	github.com/google/uuid v1.6.0

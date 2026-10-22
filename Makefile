@@ -1,3 +1,6 @@
+# Use the certificate-distrust patched compiler for all build/test targets.
+export GOTOOLCHAIN := go1.26.10
+
 .PHONY: all start build build-openai clean test run run-openai help install dev fmt lint
 
 # 默认目标 - 推荐使用 OpenAI 模式

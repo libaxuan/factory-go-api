@@ -1,7 +1,10 @@
 # 多阶段构建 Dockerfile
 
 # 第一阶段：构建
-FROM golang:1.22-alpine AS builder
+FROM golang:1.26.10-alpine@sha256:5cb67f19c5e7994dcb80c074f7cfca8aeeada45bbdca035f73df269cefdcce61 AS builder
+
+COPY scripts/security-ca.sh /usr/local/bin/security-ca
+RUN apk add --no-cache 'ca-certificates>=20261020-r0' openssl && sh /usr/local/bin/security-ca
 
 # 安装必要的构建工具
 RUN apk add --no-cache git ca-certificates tzdata
@@ -19,7 +22,10 @@ RUN go mod download && \
     CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o factory-proxy-openai main_multimodel.go
 
 # 第二阶段：运行（Anthropic 原生模式）
-FROM alpine:latest AS anthropic
+FROM alpine:3.22@sha256:822614ea121e1d40a33655081af10ef85f0aa2ab9e61f649ceaf0c651822433c AS anthropic
+
+COPY scripts/security-ca.sh /usr/local/bin/security-ca
+RUN apk add --no-cache 'ca-certificates>=20261020-r0' openssl && sh /usr/local/bin/security-ca
 
 # 安装 ca-certificates 用于 HTTPS 请求
 RUN apk --no-cache add ca-certificates tzdata
@@ -52,7 +58,10 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 ENTRYPOINT ["./factory-proxy-openai"]
 
 # 第三阶段：运行（OpenAI 兼容模式）
-FROM alpine:latest AS openai
+FROM alpine:3.22@sha256:822614ea121e1d40a33655081af10ef85f0aa2ab9e61f649ceaf0c651822433c AS openai
+
+COPY scripts/security-ca.sh /usr/local/bin/security-ca
+RUN apk add --no-cache 'ca-certificates>=20261020-r0' openssl && sh /usr/local/bin/security-ca
 
 # 安装 ca-certificates 用于 HTTPS 请求
 RUN apk --no-cache add ca-certificates tzdata
